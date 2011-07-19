@@ -96,12 +96,29 @@ for hz in 2 5 10 30; do
 	exec_echo "..Extracting images"
 	exec_cmd scripts/extract_data.py $f-${hz}hz-synced-gt-points.bag
 	exec_cmd mencoder mf://$f-${hz}hz-synced-gt-points-rgb/*.png -mf fps=${hz}:type=png -ovc lavc -lavcopts vcodec=mpeg4 -nosound -o $f-${hz}hz-synced-gt-points-rgb.avi;
-	exec_cmd mencoder mf://$f-${hz}hz-synced-gt-points-depth/*.png -mf fps=${hz}:type=png -ovc lavc -lavcopts vcodec=mpeg4 -nosound -o $f-${hz}hz-synced-gt-points-depth.avi;
+	exec_cmd mencoder mf://$f-${hz}hz-synced-gt-points-depth8/*.png -mf fps=${hz}:type=png -ovc lavc -lavcopts vcodec=mpeg4 -nosound -o $f-${hz}hz-synced-gt-points-depth.avi;
 	
 	# export statistics
 	# exec_cmd scripts/extract_statistics.py $f-${hz}hz-synced-gt-points.bag > $f-${hz}hz-synced-gt-points-statistics.txt
 	
 	# export trajectory
 	exec_echo "..Extracting groundtruth"
-	exec_cmd scripts/extract_groundtruth.py $f-${hz}hz-synced-gt-points.bag 
+	exec_cmd scripts/extract_groundtruth.py $f-${hz}hz-synced-gt-points.bag
+	
+	exec_echo "..Renaming files"
+	exec_cmd mv $f-${hz}hz-synced-gt-points.bag $f-${hz}hz.bag
+	exec_cmd mv $f-${hz}hz-synced-gt-points.txt $f-${hz}hz.txt
+	exec_cmd mv $f-${hz}hz-stderr-stdout.txt $f-${hz}hz.log
+	exec_cmd mv $f-${hz}hz-synced-gt-points-rgb $f-${hz}hz-rgb
+	exec_cmd mv $f-${hz}hz-synced-gt-points-depth16 $f-${hz}hz-depth
+	
+	exec_echo "..Creating archive" 
+	exec_cmd tar cvzf $f-${hz}hz-synced-gt-data.tgz $f-${hz}hz-rgb $f-${hz}hz-depth $f-${hz}hz.txt
+		
+	exec_echo "..Cleaning up"
+	exec_cmd rm -rf $f-${hz}hz-synced-gt-points-depth8
+	exec_cmd rm -rf $f-${hz}hz-rgb
+	exec_cmd rm -rf $f-${hz}hz-depth16
+	exec_cmd rm -rf $f-${hz}hz-synced.bag
+	exec_cmd rm -rf $f-${hz}hz-synced-gt.bag
 done

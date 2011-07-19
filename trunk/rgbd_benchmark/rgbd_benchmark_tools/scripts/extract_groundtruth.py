@@ -34,7 +34,7 @@ if __name__ == '__main__':
     args = parser.parse_args()
 
     if not args.outputlog:
-        args.outputlog = os.path.splitext(args.inputbag)[0] + ".log"
+        args.outputlog = os.path.splitext(args.inputbag)[0] + ".txt"
     
 #    print "Processing bag file:"
 #    print "  in:",args.inputbag

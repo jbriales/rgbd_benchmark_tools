@@ -29,9 +29,12 @@ if __name__ == '__main__':
     rgbfile = os.path.splitext(args.inputbag)[0] + "-rgb"
     if not os.path.isdir(rgbfile): 
         os.mkdir(rgbfile)
-    depthfile = os.path.splitext(args.inputbag)[0] + "-depth"
-    if not os.path.isdir(depthfile): 
-        os.mkdir(depthfile)
+    depthfile16 = os.path.splitext(args.inputbag)[0] + "-depth16"
+    if not os.path.isdir(depthfile16): 
+        os.mkdir(depthfile16)
+    depthfile8 = os.path.splitext(args.inputbag)[0] + "-depth8"
+    if not os.path.isdir(depthfile8): 
+        os.mkdir(depthfile8)
     tffile = os.path.splitext(args.inputbag)[0] + "-tf"
     if not os.path.isdir(tffile): 
         os.mkdir(tffile)
@@ -68,6 +71,15 @@ if __name__ == '__main__':
         if topic == "/camera/depth/image":
             depth_image = msg
             cv_depth_image = bridge.imgmsg_to_cv(depth_image, "passthrough")
+            img = cv.CreateImage( (640,480), 8, 1)
+            for v in range(depth_image.height):
+                for u in range(depth_image.width):
+                    try:
+                        d = (int) (cv_depth_image[v,u]*40)
+                        img[v,u] = d
+                    except:
+                        img[v,u] = 0
+            cv.SaveImage(depthfile8+"/%f.png"%depth_image.header.stamp.to_sec(),img)
             img = cv.CreateImage( (640,480), 16, 1)
             for v in range(depth_image.height):
                 for u in range(depth_image.width):
@@ -76,7 +88,7 @@ if __name__ == '__main__':
                         img[v,u] = d
                     except:
                         img[v,u] = 0
-            cv.SaveImage(depthfile+"/%f.png"%depth_image.header.stamp.to_sec(),img)
+            cv.SaveImage(depthfile16+"/%f.png"%depth_image.header.stamp.to_sec(),img)
         if topic == "/camera/rgb/image_color":
             rgb_image_color = msg
             cv_rgb_image_color = bridge.imgmsg_to_cv(rgb_image_color, "bgr8")
