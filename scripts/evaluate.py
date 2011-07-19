@@ -47,7 +47,7 @@ def compute_err(param_delta,param_delay,traj_gt,traj_est,stamps_gt,stamps_est):
         stamp_gt_0 = find_closest_stamp(stamps_gt,stamp_est_0 - param_delay)
         stamp_gt_1 = find_closest_stamp(stamps_gt,stamp_est_1 - param_delay)
         
-        print stamp_est_0,stamp_est_1,stamp_gt_0,stamp_gt_1
+        #print stamp_est_0,stamp_est_1,stamp_gt_0,stamp_gt_1
         
         error44 = ominus(  ominus( traj_est[stamp_est_1], traj_est[stamp_est_0] ),
                            ominus( traj_gt[stamp_gt_1], traj_gt[stamp_gt_0] ) )
@@ -89,7 +89,7 @@ if __name__ == '__main__':
         sys.exit()
 
     if args.evaldelay:
-        for param_delay in numpy.arange(-0.5,0.5,0.01):
+        for param_delay in numpy.arange(-0.1,0.1,0.01):
             err_trans = compute_err(param_delta,param_delay,traj_gt,traj_est,stamps_gt,stamps_est)    
             print param_delay, " ".join(str(f) for f in err_trans)
         sys.exit()

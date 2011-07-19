@@ -58,11 +58,7 @@ if __name__ == '__main__':
     
     inbag = rosbag.Bag(args.inputbag,'r')
     time_start = None
-    log = []
-    log.append( "# ground truth trajectory")
-    log.append( "# file: '%s'"%args.inputbag)
-    log.append( "#" )
-    log.append( "# time,tx,ty,tz,qx,qy,qz,qw" )
+    log = {}
     for topic, msg, t in inbag.read_messages(topics=["/tf"]):
         if time_start==None:
             time_start=t
@@ -74,39 +70,46 @@ if __name__ == '__main__':
         if topic=="/tf":
             for transform in msg.transforms:
                 tf_buffer[ (transform.header.frame_id,transform.child_frame_id) ] = transform
-                logtime = transform.header.stamp
+                if transform.child_frame_id=="/Kinect":
+                    logtime = transform.header.stamp
             #print [(transform.header.frame_id,transform.child_frame_id) for transform in msg.transforms]
             # when we get an updated tranformation to the Kinect camera:
 #            for tr in msg.transforms:
 #                print tr.header.stamp.secs,tr.header.stamp.nsecs,tr.header.frame_id,tr.child_frame_id
 
-            if "/openni_camera" in [transform.child_frame_id for transform in msg.transforms]:
-                try:
-                    mat44_mocap_kinect = transform44(tf_buffer[("/mocap","/Kinect")])
-                    mat44_kinect_openni = transform44(tf_buffer[("/Kinect","/openni_camera")])
-                    mat44_openni_rgb = transform44(tf_buffer[("/openni_camera","/openni_rgb_frame")])
-                    mat44_rgb_optical = transform44(tf_buffer[("/openni_rgb_frame","/openni_rgb_optical_frame")])
-                    
-                    mat44 = numpy.dot(numpy.dot(numpy.dot(
-                                                          mat44_mocap_kinect,
-                                                          mat44_kinect_openni),
-                                                mat44_openni_rgb),
-                                      mat44_rgb_optical)
-                    
-                    xyz = tuple(tf.transformations.translation_from_matrix(mat44))[:3]
-                    quat = tuple(tf.transformations.quaternion_from_matrix(mat44))
-                    log.append( "%+5.4f,    %+1.4f, %+1.4f, %+1.4f,    %+1.4f, %+1.4f, %+1.4f, %+1.4f"%(logtime.to_sec(),xyz[0],xyz[1],xyz[2],quat[0],quat[1],quat[2],quat[3]))
+            try:
+                mat44_mocap_kinect = transform44(tf_buffer[("/world","/Kinect")])
+                mat44_kinect_openni = transform44(tf_buffer[("/Kinect","/openni_camera")])
+                mat44_openni_rgb = transform44(tf_buffer[("/openni_camera","/openni_rgb_frame")])
+                mat44_rgb_optical = transform44(tf_buffer[("/openni_rgb_frame","/openni_rgb_optical_frame")])
+                
+                mat44 = numpy.dot(numpy.dot(numpy.dot(
+                                                      mat44_mocap_kinect,
+                                                      mat44_kinect_openni),
+                                            mat44_openni_rgb),
+                                  mat44_rgb_optical)
+                
+                xyz = tuple(tf.transformations.translation_from_matrix(mat44))[:3]
+                quat = tuple(tf.transformations.quaternion_from_matrix(mat44))
+                log[logtime.to_sec()] =  "%+5.4f,    %+1.4f, %+1.4f, %+1.4f,    %+1.4f, %+1.4f, %+1.4f, %+1.4f"%(logtime.to_sec(),xyz[0],xyz[1],xyz[2],quat[0],quat[1],quat[2],quat[3])
 #                    print "t=%3.5f"%logtime.to_sec()  
-                except KeyError:
-                    print "waiting for tf"
-                    continue
-                except:
-                    raise
+            except KeyError:
+                print "waiting for tf"
+                continue
+            except:
+                raise
     print
-    log.append("")
-    s = "\n".join(log)
+    s = """# ground truth trajectory
+# file: '%s'
+# time,tx,ty,tz,qx,qy,qz,qw
+"""%args.inputbag
+    k = log.keys()
+    k.sort()
+    for t in k:
+        s += log[t]+"\n"
     f = open(args.outputlog,"w")
     f.write(s)
     f.close
     print 
     print "Ground truth trajectory saved to '%s'"%args.outputlog
+    

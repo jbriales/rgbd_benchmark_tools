@@ -1,48 +1,107 @@
 #!/bin/bash
 
-fi=$1
-p=$(rospack find kinect_datasets)/bags
+# enable strict error checking
+set -u
+set -e
 
-echo
-echo
-echo "Processing $fi"
-f=${fi%.bag}
-echo "Basename $f"
+# get arguments
+if [ $# -ne 2 ]
+then
+  echo "Usage: `basename $0` <input.bag> </dir/to/output/folder>"
+  exit 1
+fi
 
-rm -rf $f-rgb $f-imu $f-depth $f-tf
+original_bag=$1
+output_folder=$2
+mkdir -p $output_folder
 
-rosbag info $f.bag
+basename=$(basename $original_bag .bag)
+f=$output_folder/$basename
+
+# create log file
+LOGFILE=$f-stderr-stdout.txt
+echo "Creating log file '$LOGFILE'"
+rm -f $LOGFILE
+
+TMPFILE=$(mktemp)
+
+function exec_echo()  
+{
+	echo $@
+    echo "================================================================================" >> $LOGFILE
+    echo >> $LOGFILE   
+	echo $@ >> $LOGFILE
+}
+
+exec_echo "Input File: '$original_bag'"
+exec_echo "Output Folder: '$output_folder'"
+exec_echo "Output Prefix: '$f'"
+
+function exec_cmd()  
+{
+	echo -n "    running '$@'" 
+	echo -n "    running '$@'" >> $LOGFILE
+	START=$(date +%s)
+	rm -f $TMPFILE
+	eval $@ 1>>$TMPFILE 2>&1 || {
+	      END=$(date +%s); 
+          DIFF=$(( $END - $START )); 
+		  echo -e " (FAIL after ${DIFF}s)\n\n================================================================================"; 
+		  cat $TMPFILE;  
+		  echo -e "================================================================================\nExiting after error..";
+		  kill $$
+		} | tee -a $LOGFILE
+	END=$(date +%s)
+    DIFF=$(( $END - $START ))
+    if test $DIFF -gt 0; then
+    	echo " (SUCCESS after ${DIFF}s)" | tee -a $LOGFILE
+    else 
+	    echo " (SUCCESS)" | tee -a $LOGFILE
+    fi
+
+	cat $TMPFILE | while read line; do
+	    echo "    |  $line" >> $LOGFILE
+	done
+	echo "    |________________________________________________________________________________" >> $LOGFILE
+	echo "" >> $LOGFILE
+}
+
+# cd to the tools folder
+exec_cmd date
+exec_cmd cd $(rospack find rgbd_benchmark_tools)
+exec_cmd svn info
+
+exec_echo "Copying file to working dir"
+exec_cmd cp $original_bag $f.bag
+exec_cmd rosbag info $f.bag
 
 # synchronize file
-echo "synchronizing data"
-scripts/synchronize.py $f.bag
-
-rosbag reindex $f-synced.bag
+exec_echo "Synchronizing data"
+exec_cmd scripts/synchronize.py $f.bag --delay 0.04
 
 # add groundtruth tf
-echo "add_groundtruth"
-scripts/add_groundtruth.py --prop Kinect.prop --calibration calibration.bag $f-synced.bag
+echo "Adding groundtruth and calibration"
+exec_cmd scripts/add_groundtruth.py --prop Kinect.prop --calibration calibration.bag $f-synced.bag
 
 for hz in 2 5 10 30; do
-    echo "hz=$hz"
-    echo
-	# add pointclouds
-	echo "add_points"
-	scripts/add_points.py  --nth $[30/$hz] $f-synced-gt.bag $f-${hz}hz-synced-gt-points.bag
+	exec_echo "..Processing of $f.bag at $hz Hz"
 	
-	rosbag info $f-${hz}hz-synced-gt-points.bag
+	# add pointclouds
+	exec_echo "..Downsampling to $hz Hz and adding point clouds"
+	exec_cmd scripts/add_points.py  --nth $[30/$hz] $f-synced-gt.bag $f-${hz}hz-synced-gt-points.bag
+	
+	exec_cmd rosbag info $f-${hz}hz-synced-gt-points.bag
 	
 	# add export images 
-	echo "extract data"
-	scripts/extract_data.py $f-${hz}hz-synced-gt-points.bag
+	exec_echo "..Extracting images"
+	exec_cmd scripts/extract_data.py $f-${hz}hz-synced-gt-points.bag
+	exec_cmd mencoder mf://$f-${hz}hz-synced-gt-points-rgb/*.png -mf fps=${hz}:type=png -ovc lavc -lavcopts vcodec=mpeg4 -nosound -o $f-${hz}hz-synced-gt-points-rgb.avi;
+	exec_cmd mencoder mf://$f-${hz}hz-synced-gt-points-depth/*.png -mf fps=${hz}:type=png -ovc lavc -lavcopts vcodec=mpeg4 -nosound -o $f-${hz}hz-synced-gt-points-depth.avi;
 	
 	# export statistics
-	# scripts/extract_statistics.py $f-${hz}hz-synced-gt-points.bag > $f-${hz}hz-synced-gt-points-statistics.txt
+	# exec_cmd scripts/extract_statistics.py $f-${hz}hz-synced-gt-points.bag > $f-${hz}hz-synced-gt-points-statistics.txt
 	
 	# export trajectory
-	scripts/extract_groundtruth.py $f-${hz}hz-synced-gt-points.bag 
-	
-	echo
-	echo
-	echo "----------------------------------------------------------------------------------"
+	exec_echo "..Extracting groundtruth"
+	exec_cmd scripts/extract_groundtruth.py $f-${hz}hz-synced-gt-points.bag 
 done
