@@ -137,7 +137,8 @@ if __name__ == '__main__':
                     pose.transform.translation = geometry_msgs.msg.Vector3(*xyz)
                     pose.transform.rotation = geometry_msgs.msg.Quaternion(*quat)
                     pose.header = copy.deepcopy(object.header)
-                    pose.header.frame_id = object.header.frame_id
+                    #pose.header.frame_id = object.header.frame_id
+                    pose.header.frame_id = "/world"
                     pose.child_frame_id = "/"+object.ns
                     tfmsg.transforms.append(pose)
 

@@ -23,9 +23,10 @@ if __name__ == '__main__':
     adds the corresponding PointCloud2 messages, and saves it again into a bag file. 
     Optional arguments allow to select only a portion of the original bag file.  
     ''')
-    parser.add_argument('--start', help='skip the first N seconds of  input bag file')
+    parser.add_argument('--start', help='skip the first N seconds of  input bag file',default=0.00)
     parser.add_argument('--duration', help='only process N seconds of  input bag file')
-    parser.add_argument('--nth', help='only process every N-th frame of input bag file')
+    parser.add_argument('--nth', help='only process every N-th frame of input bag file',default=1)
+    parser.add_argument('--skip', help='skip N blocks in the beginning', default=1)
     parser.add_argument('inputbag', help='input bag file')
     parser.add_argument('outputbag', nargs='?',help='output bag file')
     args = parser.parse_args()
@@ -36,18 +37,14 @@ if __name__ == '__main__':
     print "Processing bag file:"
     print "  in:",args.inputbag
     print "  out:",args.outputbag
-    if args.start:
-        print "  starting from: %s seconds"%(args.start)
-    else:
-        args.start = 0
+    print "  starting from: %s seconds"%(args.start)
         
     if args.duration:
         print "  duration: %s seconds"%(args.duration)
         
-    if args.nth:
-        print "  saving every %s-th frame"%(args.nth)
-    else:
-        args.nth = 1
+    print "  saving every %s-th frame"%(args.nth)
+    args.skip = float(args.skip)
+    print "  skipping %s blocks"%(args.skip)
 
     inbag = rosbag.Bag(args.inputbag,'r')
     outbag = rosbag.Bag(args.outputbag, 'w', compression=rosbag.bag.Compression.BZ2)
@@ -91,6 +88,9 @@ if __name__ == '__main__':
             
             frame += 1
             if frame % float(args.nth) ==0:
+                if args.skip > 0:
+                    args.skip -= 1
+                    continue
                 # store messages
                 msg = tf.msg.tfMessage()
                 msg.transforms = list( transforms.itervalues() ) 
