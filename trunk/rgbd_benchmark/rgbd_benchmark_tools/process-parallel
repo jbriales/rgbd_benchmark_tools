@@ -1,0 +1,24 @@
+#!/bin/bash
+./process-file /usr/wiss/sturmju/ros/kinect_vslam/kinect_datasets/bags/kinect_dataset_floor.bag $1 2>&1 | tee process-kinect_dataset_floor.bag.log
+
+./process-file /usr/wiss/sturmju/ros/kinect_vslam/kinect_datasets/bags/public/kinect_dataset_xyz.bag $1 2>&1 | tee process-kinect_dataset_xyz.bag.log
+./process-file /usr/wiss/sturmju/ros/kinect_vslam/kinect_datasets/bags/public/kinect_dataset_rpy.bag $1 2>&1 | tee process-kinect_dataset_rpy.bag.log
+
+./process-file /usr/wiss/sturmju/ros/kinect_vslam/kinect_datasets/bags/public/kinect_dataset_desk.bag $1 2>&1 | tee process-kinect_dataset_desk.bag.log
+./process-file /usr/wiss/sturmju/ros/kinect_vslam/kinect_datasets/bags/public/kinect_dataset_desk2.bag $1 2>&1 | tee process-kinect_dataset_desk2.bag.log
+./process-file /usr/wiss/sturmju/ros/kinect_vslam/kinect_datasets/bags/public/kinect_dataset_room.bag $1 2>&1 | tee process-kinect_dataset_room.bag.log
+
+./process-file /usr/wiss/sturmju/ros/kinect_vslam/kinect_datasets/bags/public/kinect_dataset_360.bag $1 2>&1 | tee process-kinect_dataset_360.bag.log
+
+./process-file /usr/wiss/sturmju/ros/kinect_vslam/kinect_datasets/bags/public/kinect_dataset_teddy.bag $1 2>&1 | tee process-kinect_dataset_teddy.bag.log
+./process-file /usr/wiss/sturmju/ros/kinect_vslam/kinect_datasets/bags/public/kinect_dataset_plant.bag $1 2>&1 | tee process-kinect_dataset_plant.bag.log
+
+
+./process-file /usr/wiss/sturmju/ros/kinect_vslam/kinect_datasets/bags/secret/kinect_dataset_teddy_secret.bag $1 2>&1 | tee process-kinect_dataset_teddy_secret.bag.log
+./process-file /usr/wiss/sturmju/ros/kinect_vslam/kinect_datasets/bags/secret/kinect_dataset_xyz_secret.bag $1 2>&1 | tee process-kinect_dataset_xyz_secret.bag.log
+./process-file /usr/wiss/sturmju/ros/kinect_vslam/kinect_datasets/bags/secret/kinect_dataset_plant_secret.bag $1 2>&1 | tee process-kinect_dataset_plant_secret.bag.log
+./process-file /usr/wiss/sturmju/ros/kinect_vslam/kinect_datasets/bags/secret/kinect_dataset_room_secret.bag $1 2>&1 | tee process-kinect_dataset_room_secret.bag.log
+./process-file /usr/wiss/sturmju/ros/kinect_vslam/kinect_datasets/bags/secret/kinect_dataset_desk2_secret.bag $1 2>&1 | tee process-kinect_dataset_desk2_secret.bag.log
+./process-file /usr/wiss/sturmju/ros/kinect_vslam/kinect_datasets/bags/secret/kinect_dataset_360_secret.bag $1 2>&1 | tee process-kinect_dataset_360_secret.bag.log
+./process-file /usr/wiss/sturmju/ros/kinect_vslam/kinect_datasets/bags/secret/kinect_dataset_desk_secret.bag $1 2>&1 | tee process-kinect_dataset_desk_secret.bag.log
+./process-file /usr/wiss/sturmju/ros/kinect_vslam/kinect_datasets/bags/secret/kinect_dataset_rpy_secret.bag $1 2>&1 | tee process-kinect_dataset_rpy_secret.bag.log
