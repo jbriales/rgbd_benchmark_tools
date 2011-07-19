@@ -68,28 +68,19 @@ if __name__ == '__main__':
         if topic == "/camera/depth/image":
             depth_image = msg
             cv_depth_image = bridge.imgmsg_to_cv(depth_image, "passthrough")
-            img = cv.CreateImage( (640,480), 8, 3)
+            img = cv.CreateImage( (640,480), 16, 1)
             for v in range(depth_image.height):
                 for u in range(depth_image.width):
                     try:
-                        d = (int) (cv_depth_image[v,u]*1000)
-                        a = ((d / 256)%16)*16
-                        
-                        img[v,u] = (a + d%16,a+(d/16%16),a+(d/256*16)%16)
+                        d = (int) (cv_depth_image[v,u]*5000)
+                        img[v,u] = d
                     except:
-                        img[v,u] = (0,0,0)
+                        img[v,u] = 0
             cv.SaveImage(depthfile+"/%f.png"%depth_image.header.stamp.to_sec(),img)
         if topic == "/camera/rgb/image_color":
             rgb_image_color = msg
             cv_rgb_image_color = bridge.imgmsg_to_cv(rgb_image_color, "bgr8")
             cv.SaveImage(rgbfile+"/%f.png"%rgb_image_color.header.stamp.to_sec(),cv_rgb_image_color)
-        if topic == "/tf":
-           for t in msg.transforms:
-               i=0
-               while os.path.exists(tffile+"/%f-%d.txt"%(t.header.stamp.to_sec(),i)): i+=1
-               f = open(tffile+"/%f-%d.txt"%(t.header.stamp.to_sec(),i),"w")
-               f.write(t.__str__())
-               f.close()
         if topic == "/imu":
                f = open(imufile+"/%f.txt"%msg.header.stamp.to_sec(),"w")
                f.write(msg.__str__())

@@ -22,7 +22,7 @@ This script reads a bagfile, synchronizes the timestamps of the mocap and correc
 ''')
 parser.add_argument('inputbag', help='input bag file')
 parser.add_argument('outputbag', nargs='?',help='output bag file')
-parser.add_argument('--delay', help='time offset between files (see paper)',default=0.04)
+parser.add_argument('--delay', help='time offset between files',default=0.00)
 args = parser.parse_args()
 
 if not args.outputbag:
