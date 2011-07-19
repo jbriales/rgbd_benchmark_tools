@@ -19,5 +19,5 @@ datasets="360 desk2 desk floor plant room rpy teddy xyz"
 roscd rgbd_benchmark_tools
 
 for dataset in $datasets; do
-  ./process-file $dataset
+  ./process-file $HOME/original_bags/kinect_dataset_$dataset.bag /work/sturmju/tmp
 done 
