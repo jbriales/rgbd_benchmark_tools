@@ -1,6 +1,6 @@
 #!/bin/bash
 #set -o verbose #echo onset +o verbose #echo off
-p=$(rospack find kinect_datasets)/bags
+#p=$(rospack find kinect_datasets)/bags
 
 # generate calibration data
 #echo $p
@@ -9,9 +9,15 @@ p=$(rospack find kinect_datasets)/bags
 #exit
 
 # now add points and tf data to all files
-echo "#!/bin/bash"
-for fi in $(find $p -name "*.bag" | grep -v points.bag | grep -v gt.bag ); do
-  echo "./process-file $fi \$1 2>&1 | tee process-$(basename $fi).log"
+#echo "#!/bin/bash"
+#for fi in $(find $p -name "*.bag" | grep -v points.bag | grep -v gt.bag ); do
+#  echo "./process-file $fi \$1 2>&1 | tee process-$(basename $fi).log"
 #  ./process-file $fi 2>&1 | tee process-$(basename $fi).log &
-done
+#done
 
+datasets="360 desk2 desk floor plant room rpy teddy xyz"
+roscd rgbd_benchmark_tools
+
+for dataset in $datasets; do
+  ./process-file $dataset
+done 
