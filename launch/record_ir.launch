@@ -1,0 +1,14 @@
+<launch>
+
+  <node pkg="rosbag" type="rosbag" name="rosbag_record" output="screen" 
+  	args="record 
+  	 -o $(find kinect_datasets)/bags/kinect_dataset
+  	 /camera/ir/camera_info
+  	 /camera/ir/image_raw
+  	 /camera/ir/image_rect
+	 /tf 
+	/cortex_marker_array
+"
+  />
+
+</launch>

@@ -1,0 +1,48 @@
+#!/bin/bash
+
+fi=$1
+p=$(rospack find kinect_datasets)/bags
+
+echo
+echo
+echo "Processing $fi"
+f=${fi%.bag}
+echo "Basename $f"
+
+rm -rf $f-rgb $f-imu $f-depth $f-tf
+
+rosbag info $f.bag
+
+# synchronize file
+echo "synchronizing data"
+scripts/synchronize.py $f.bag
+
+rosbag reindex $f-synced.bag
+
+# add groundtruth tf
+echo "add_groundtruth"
+scripts/add_groundtruth.py --prop Kinect.prop --calibration calibration.bag $f-synced.bag
+
+for hz in 2 5 10 30; do
+    echo "hz=$hz"
+    echo
+	# add pointclouds
+	echo "add_points"
+	scripts/add_points.py  --nth $[30/$hz] $f-synced-gt.bag $f-${hz}hz-synced-gt-points.bag
+	
+	rosbag info $f-${hz}hz-synced-gt-points.bag
+	
+	# add export images 
+	echo "extract data"
+	scripts/extract_data.py $f-${hz}hz-synced-gt-points.bag
+	
+	# export statistics
+	# scripts/extract_statistics.py $f-${hz}hz-synced-gt-points.bag > $f-${hz}hz-synced-gt-points-statistics.txt
+	
+	# export trajectory
+	scripts/extract_groundtruth.py $f-${hz}hz-synced-gt-points.bag 
+	
+	echo
+	echo
+	echo "----------------------------------------------------------------------------------"
+done
