@@ -35,12 +35,7 @@ if __name__ == '__main__':
     depthfile8 = os.path.splitext(args.inputbag)[0] + "-depth8"
     if not os.path.isdir(depthfile8): 
         os.mkdir(depthfile8)
-    tffile = os.path.splitext(args.inputbag)[0] + "-tf"
-    if not os.path.isdir(tffile): 
-        os.mkdir(tffile)
-    imufile = os.path.splitext(args.inputbag)[0] + "-imu"
-    if not os.path.isdir(imufile): 
-        os.mkdir(imufile)
+    imufile = os.path.splitext(args.inputbag)[0] + "-imu.txt"
       
     print "Processing bag file:"
     print "  in:",args.inputbag
@@ -60,6 +55,11 @@ if __name__ == '__main__':
     
     time_start = None
     depth_image=0
+    imufile = open(imufile,"w")
+    imufile.write("""# accelerometer data
+# file: '%s'
+# time,ax,ay,az
+"""%args.inputbag)
     for topic, msg, t in inbag.read_messages():
         if time_start==None:
             time_start=t
@@ -94,7 +94,11 @@ if __name__ == '__main__':
             cv_rgb_image_color = bridge.imgmsg_to_cv(rgb_image_color, "bgr8")
             cv.SaveImage(rgbfile+"/%f.png"%rgb_image_color.header.stamp.to_sec(),cv_rgb_image_color)
         if topic == "/imu":
-               f = open(imufile+"/%f.txt"%msg.header.stamp.to_sec(),"w")
-               f.write(msg.__str__())
-               f.close()
+            imufile.write("%+5.4f,    %+1.4f, %+1.4f, %+1.4f\n"%
+                          (msg.header.stamp.to_sec(),
+                           msg.linear_acceleration.x,
+                           msg.linear_acceleration.y,
+                           msg.linear_acceleration.z))
     print
+    imufile.close()
+    
