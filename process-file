@@ -119,9 +119,8 @@ for hz in 2; do
 	exec_cmd rm -rf $f-${hz}hz-synced-gt-points-depth8
 	exec_cmd rm -rf $f-${hz}hz-rgb
 	exec_cmd rm -rf $f-${hz}hz-depth
-	exec_cmd rm -rf $f-${hz}hz-synced.bag
-	exec_cmd rm -rf $f-${hz}hz-synced-gt.bag
 done
 
 exec_echo "Cleaning up"
 exec_cmd rm -rf $f-synced.bag
+exec_cmd scripts/extract_statistics.py $f-synced-gt.bag
