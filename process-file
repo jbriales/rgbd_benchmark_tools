@@ -122,3 +122,6 @@ for hz in 2; do
 	exec_cmd rm -rf $f-${hz}hz-synced.bag
 	exec_cmd rm -rf $f-${hz}hz-synced-gt.bag
 done
+
+exec_echo "Cleaning up"
+exec_cmd rm -rf $f-synced.bag
