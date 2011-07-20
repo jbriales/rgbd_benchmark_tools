@@ -31,13 +31,12 @@ if __name__ == '__main__':
     
     traj_gt = read_trajectory(args.groundtruth)
     
-    print "axis range"
     keys = traj_gt.keys();
     keys.sort();
     for axis in range(3):
         values = [traj_gt[t][axis,3] for t in keys]
         #print values
-        print "%s-axis: %0.2fm"%(["x","y","z"][axis],numpy.max(values)-numpy.min(values))
+        print "motion along %s-axis: %0.2fm"%(["x","y","z"][axis],numpy.max(values)-numpy.min(values))
         
     delta = 1
     motion_trans = []
@@ -58,15 +57,17 @@ if __name__ == '__main__':
         
     avg_delta = numpy.mean([a-b for a,b in zip(keys[1:],keys[:-1])])
         
+    
     print
     print "average groundtruth frequency: %0.3fHz"%(1/avg_delta)
+    print "duration: %0.1fs"%(keys[-1]-keys[0])
     print "average translational velocity: %0.3fm/s"%numpy.mean(motion_trans)
     print "average angular velocity: %0.3frad/s (%0.3fdeg/s)"%(
                                                          numpy.mean(motion_rot),
                                                          numpy.mean(motion_rot) / numpy.pi * 180)
     print
-    print "trajectory length, translational motion: %0.3fm"%(numpy.sum(motion_trans)*avg_delta)
-    print "trajectory length, rotational motion: %0.3frad (%0.3fdeg)"%(
+    print "sum of translations along trajectory: %0.3fm"%(numpy.sum(motion_trans)*avg_delta)
+    print "angular sum of rotations motion along trajectory: %0.3frad (%0.3fdeg)"%(
                                                          numpy.sum(motion_rot)*avg_delta,
                                                          numpy.sum(motion_rot) / numpy.pi * 180*avg_delta)
         

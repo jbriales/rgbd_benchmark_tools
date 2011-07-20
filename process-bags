@@ -19,6 +19,5 @@ datasets="360 desk2 desk floor plant room rpy teddy xyz"
 cd $(rospack find rgbd_benchmark_tools)
 
 for dataset in $datasets; do
-  ./process-file $HOME/original_bags/kinect_dataset_$dataset.bag /work/sturmju/tmp &
-  sleep 300 || exit
+  ./process-file $HOME/original_bags/kinect_dataset_$dataset.bag /work/sturmju/tmp
 done 
