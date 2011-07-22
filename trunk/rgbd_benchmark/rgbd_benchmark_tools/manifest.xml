@@ -10,7 +10,6 @@
   <url>http://ros.org/wiki/rgbd_benchmark_tools</url>
   <depend package="openni_camera"/>
   <depend package="rospy"/>
-  <depend package="kinect_aux"/>
   <depend package="rosbag"/>
   <depend package="cv_bridge"/>
   <depend package="opencv2"/>
