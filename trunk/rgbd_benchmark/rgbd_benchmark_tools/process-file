@@ -74,7 +74,7 @@ exec_cmd svn info
 
 exec_echo "Copying file to working dir"
 exec_cmd cp $original_bag $f.bag
-exec_cmd cp $basename-info.txt $f-info.txt
+exec_cmd cp ${original_bag%.bag}-info.txt $f-info.txt
 exec_cmd rosbag info $f.bag
 
 # synchronize file
