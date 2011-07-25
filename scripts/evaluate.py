@@ -1,42 +1,43 @@
 #!/usr/bin/python
 
-import roslib; roslib.load_manifest('kinect_bagtools')
-import rospy
-import rosbag
-import sensor_msgs.msg
 import argparse
 import sys
 import os
-import cv
-import struct
-import array
-import tf
 import numpy
-import numpy.linalg.linalg
-import geometry_msgs
-import copy
-import cb_detector
 
-def transform44(ts):
-    return numpy.dot(tf.listener.xyz_to_mat44(ts.translation), tf.listener.xyzw_to_mat44(ts.rotation))
+_EPS = numpy.finfo(float).eps * 4.0
 
-def build_transform(l):
-    transform = geometry_msgs.msg.Transform()
-    transform.translation = geometry_msgs.msg.Vector3(*l[1:4])
-    transform.rotation = geometry_msgs.msg.Quaternion(*l[4:8])
-    return transform
+def transform44(l):
+    t = l[1:4]
+    q = numpy.array(l[4:8], dtype=numpy.float64, copy=True)
+    nq = numpy.dot(q, q)
+    if nq < _EPS:
+        return numpy.array((
+        (                1.0,                 0.0,                 0.0, t[0])
+        (                0.0,                 1.0,                 0.0, t[1])
+        (                0.0,                 0.0,                 1.0, t[2])
+        (                0.0,                 0.0,                 0.0, 1.0)
+        ), dtype=numpy.float64)
+    q *= numpy.sqrt(2.0 / nq)
+    q = numpy.outer(q, q)
+    return numpy.array((
+        (1.0-q[1, 1]-q[2, 2],     q[0, 1]-q[2, 3],     q[0, 2]+q[1, 3], t[0]),
+        (    q[0, 1]+q[2, 3], 1.0-q[0, 0]-q[2, 2],     q[1, 2]-q[0, 3], t[1]),
+        (    q[0, 2]-q[1, 3],     q[1, 2]+q[0, 3], 1.0-q[0, 0]-q[1, 1], t[2]),
+        (                0.0,                 0.0,                 0.0, 1.0)
+        ), dtype=numpy.float64)
 
 def read_trajectory(filename):
     lines = open(filename).read().replace(","," ").replace("\t"," ").split("\n") 
     list = [[float(v.strip()) for v in line.split(" ") if v.strip()!=""] for line in lines if len(line)>0 and line[0]!="#"]
-    traj = dict([(l[0],transform44(build_transform(l[0:]))) for l in list])
+    traj = dict([(l[0],transform44(l[0:])) for l in list])
     return traj
 
 def find_closest_stamp(stamps,t):
     return min([(abs(s-t),s) for s in stamps])[1]
 
 def ominus(a,b):
-    return numpy.dot(tf.transformations.inverse_matrix(a),b)
+    return numpy.dot(numpy.linalg.inv(a),b)
 
 def compute_err(param_delta,param_delay,traj_gt,traj_est,stamps_gt,stamps_est):
     err_trans = []
@@ -52,10 +53,8 @@ def compute_err(param_delta,param_delay,traj_gt,traj_est,stamps_gt,stamps_est):
         
         error44 = ominus(  ominus( traj_est[stamp_est_1], traj_est[stamp_est_0] ),
                            ominus( traj_gt[stamp_gt_1], traj_gt[stamp_gt_0] ) )
-        xyz = tuple(tf.transformations.translation_from_matrix(error44))[:3]
-        quat = tuple(tf.transformations.quaternion_from_matrix(error44))
         
-        err_trans.append( numpy.linalg.norm(xyz) )
+        err_trans.append( numpy.linalg.norm(error44[0:3,3]) )
         # an invitation to 3-d vision, p 27
         err_rot.append( numpy.arccos( (numpy.trace(error44[0:3,0:3]) - 1)/2) )
         
