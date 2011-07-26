@@ -69,7 +69,6 @@ function exec_cmd()
 # cd to the tools folder
 exec_cmd date
 exec_cmd cd $(rospack find rgbd_benchmark_tools)
-cd $(rospack find rgbd_benchmark_tools)
 exec_cmd svn info
 
 exec_echo "Copying file to working dir"
@@ -93,7 +92,7 @@ exec_echo "Extracting statistics"
 exec_cmd scripts/extract_statistics.py $f-groundtruth.txt
 exec_cmd mv $f-groundtruth-statistics.txt $f-statistics.txt
 
-for hz in 2 5 10 30; do
+for hz in 30; do
 	exec_echo "..Processing of $f.bag at $hz Hz"
 	
 	# add pointclouds
@@ -126,6 +125,7 @@ for hz in 2 5 10 30; do
 	
 	exec_echo "..Creating archive" 
 	exec_cmd cd $output_folder; tar cvzf $f-${hz}hz.tgz $f-${hz}hz-rgb $f-${hz}hz-depth $f-${hz}hz-groundtruth.txt $f-${hz}hz-imu.txt $f-statistics.txt $f-rgb.png $f-depth.png
+	exec_cmd cd $(rospack find rgbd_benchmark_tools)
 		
 	exec_echo "..Cleaning up"
 	exec_cmd rm -rf $f-${hz}hz-synced-gt-points-depth8
