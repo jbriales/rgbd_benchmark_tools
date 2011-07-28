@@ -3,10 +3,10 @@
 import sys
 import os
 
-file_prefix = "/home/sturmju/Desktop/tmp/"
-#file_prefix = "/usr/wiss/sturmju/public_html/"
-url_prefix = "/home/sturmju/Desktop/tmp/" 
-#url_prefix = "http://www9.in.tum.de/~sturmju/" 
+#file_prefix = "/home/sturmju/Desktop/tmp/"
+file_prefix = "/usr/wiss/sturmju/public_html/"
+#url_prefix = "/home/sturmju/Desktop/tmp/" 
+url_prefix = "http://www9.in.tum.de/~sturmju/" 
 
 def fileinfo(filename):
     if os.path.exists(filename):
