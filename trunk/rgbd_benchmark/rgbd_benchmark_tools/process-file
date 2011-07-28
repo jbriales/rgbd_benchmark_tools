@@ -92,7 +92,7 @@ exec_echo "Extracting statistics"
 exec_cmd scripts/extract_statistics.py $f-groundtruth.txt
 exec_cmd mv $f-groundtruth-statistics.txt $f-statistics.txt
 
-for hz in 30; do
+for hz in 2 5 10 30; do
 	exec_echo "..Processing of $f.bag at $hz Hz"
 	
 	# add pointclouds
