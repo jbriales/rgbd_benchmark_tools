@@ -51,8 +51,8 @@ for bagfile in sys.argv[2:]:
     gt = "%s-groundtruth.txt"%(filename)
 
     output.append("<table border=0><tr>")
-    output.append("<td><a href='%s'><img src='%s' width=120/></a><br><a href='%s'><img src='%s' width=120/></a></td>"%
-                  (url(rgbavi),url(rgbpng),url(depthavi),url(depthpng)))
+    output.append("<td><img src='%s' width=120/><br><img src='%s' width=120/></td>"%
+                  (url(rgbpng),url(depthpng)))
     output.append("<td valign='top'>")
     output.append("<b>Sequence '%s'</b><br>"%seqname)
     output.append("<i>%s</i><br>"%info)
