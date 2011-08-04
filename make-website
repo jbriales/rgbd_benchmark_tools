@@ -1,8 +1,8 @@
 #!/bin/bash
 
 cd $(rospack find rgbd_benchmark_tools)
-bags=$(find /usr/wiss/sturmju/public_html/dirs/rgbd_datasets/freiburg2/*.bag | grep -v hz | grep -v synced)
+bags=$(find /usr/wiss/sturmju/public_html/dirs/rgbd_datasets/freiburg1/*.bag | grep -v hz | grep -v synced)
 
-./scripts/generate_wikitext.py ~/public_html/dirs/rgbd_datasets/freiburg2/index.html $bags
+./scripts/generate_wikitext.py ~/public_html/dirs/rgbd_datasets/freiburg1/index.html $bags
 
 

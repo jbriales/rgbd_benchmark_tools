@@ -78,15 +78,18 @@ for bagfile in sys.argv[2:]:
         output.append("<a href='%s'>tgz</a>, "%(url(tgz)))
         output.append("<a href='%s'>bag</a><br> "%(url(tgz)))
         #output.append("<a href='%s'>groundtruth</a>, "%gt)
-    output.append("</td></tr><tr><td>")
+    output.append("</td></tr>")
 
-    output.append("</td></tr></table>")
-    output.append("More downloads: <br>")
-    output.append("<a href='%s'>original</a> data, "%(url(originalbag)))
-    output.append("<a href='%s'>ground-truth</a> trajectory, "%(url(originalgt)))
-    output.append("<a href='%s'>RGB</a> movie, "%(url(rgbavi)))
-    output.append("<a href='%s'>depth</a> movie, "%(url(depthavi)))
+    output.append("<tr><td>")
+    output.append("<a href='%s'>original</a> data<br> "%(url(originalbag)))
+    output.append("<a href='http://cvpr.in.tum.de/data/datasets/rgbd-dataset/intrinsic_calibration'>intrinsic</a> camera parameters<br>")
+    output.append("<a href='%s'>extrinsic</a> camera parameters (=ground-truth trajectory)<br>"%(url(originalgt)))
+    
+    output.append("</td><td>")
+    output.append("<a href='%s'>RGB</a> movie<br> "%(url(rgbavi)))
+    output.append("<a href='%s'>depth</a> movie<br> "%(url(depthavi)))
     output.append("<a href='%s'>external</a> camera"%(url(extavi)))
+    output.append("</td></tr></table><br>")
     output.append("</td></tr></table><br>")
             
     

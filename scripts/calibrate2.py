@@ -24,7 +24,7 @@ if __name__ == '__main__':
     
     # parse command line
     parser = argparse.ArgumentParser(description='''
-    This scripts reads a bag file containing kinect RGBD images and either  
+    This scripts reads a bag file containing kinect RGBD images and   
     estimates the calibration between the MoCap system and the Kinect optical frame using a Checkerboard or
     Optional arguments allow to select only a portion of the original bag file.  
     ''')
@@ -110,7 +110,6 @@ if __name__ == '__main__':
     time_start = None
     detector = cb_detector.ImageCbDetectorNode()
     camera_info = None
-    tf_buffer={}
     sum_mat44_kinect_openni = numpy.matrix(numpy.zeros( (4,4) ))
     count_mat44_kinect_openni = 0
     mat44_kinect_openni_avg = None
