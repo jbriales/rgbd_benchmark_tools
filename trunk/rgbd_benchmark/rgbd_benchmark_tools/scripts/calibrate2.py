@@ -93,13 +93,12 @@ def align(model,data,frame_id,child_frame_id,stamp=None,show_error=False):
         return None
         
     
-    sqrErr = 0
     model_aligned = rot * model + trans
     alignment_error = model_aligned - data
     
-    sqrErr = sum(sum(numpy.array(numpy.multiply(alignment_error,alignment_error)))) / model.shape[1]
-    if(sqrErr>0.005 or show_error):
-        print "Average error for '%s' to '%s' = %0.2fmm over n=%d points"%(frame_id,child_frame_id,sqrErr*1000,model.shape[1])
+    avg_err = numpy.sqrt(sum(sum(numpy.array(numpy.multiply(alignment_error,alignment_error)))) / model.shape[1])
+    if(show_error):
+        print "Average error for '%s' to '%s' = %0.2fmm over n=%d points"%(frame_id,child_frame_id,avg_err*1000,model.shape[1])
         
     mat44 = [
              [rot[0,0],rot[0,1],rot[0,2],trans[0]],
@@ -124,11 +123,11 @@ def get_rgb_to_mocap_checkerboard(model_points,stamp):
        and the mocap markers in the frame of the optical checkerboard. 
     """
     points_oncheckerboard = numpy.matrix([
-              [ 0.16, -0.02, -0.05 ],
-              [ 0.16,  0.12, -0.05 ],
-              [-0.02,  0.12, -0.05 ],
-              [-0.008, -0.07, -0.05 ],
-              [-0.02, -0.02, -0.05 ]
+              [ 0.16, -0.02, 0.005 ],
+              [ 0.16,  0.12, 0.005 ],
+              [-0.02,  0.12, 0.005 ],
+              [-0.008, -0.07, 0.005 ],
+              [-0.02, -0.02, 0.005 ]
             ]).transpose()
     return align(points_oncheckerboard,model_points["checkerboard"],
                  "/checkerboard","/mocap_checkerboard",stamp)
@@ -215,10 +214,10 @@ if __name__ == '__main__':
     corners_y = 6
     checkerboard_size = 0.02
     checkerboard_points = numpy.matrix([
-        [0,(corners_x-1)*checkerboard_size,0,(corners_x-1)*checkerboard_size],
-        [0,0,(corners_y-1)*checkerboard_size,(corners_y-1)*checkerboard_size],
-        [0.0,0.0,0.0,0.0],
-        [1,1,1,1],
+        [0,(corners_x-1)*checkerboard_size,0,(corners_x-1)*checkerboard_size,-3*checkerboard_size,0],
+        [0,0,(corners_y-1)*checkerboard_size,(corners_y-1)*checkerboard_size,-3*checkerboard_size,0],
+        [0.0,0.0,0.0,0.0,0.0,0.20],
+        [1,1,1,1,1,1],
     ])
     
     mocap_points=numpy.zeros([3,0])
@@ -289,10 +288,13 @@ if __name__ == '__main__':
                 #print "TF keys: ",tf_buffer.keys()
                 continue
             
+#            mocap_points=numpy.zeros([3,0])
+#            rgb_points=numpy.zeros([3,0])
+
             mocap_points = numpy.hstack((mocap_points,mat44_mocap_checkerboard.dot(checkerboard_points)[0:3,:]))
             rgb_points = numpy.hstack((rgb_points,mat44_rgb_checkerboard.dot(checkerboard_points)[0:3,:]))
             
-            transform = align(mocap_points,rgb_points,"/kinect","/openni_camera",msg.header.stamp,show_error=True)
+            transform = align(rgb_points,mocap_points,"/kinect","/openni_camera",msg.header.stamp,show_error=True)
             tf_buffer[ (transform.header.frame_id,transform.child_frame_id) ] = transform
             
             mat44_calibrated_mocap_checkerboard = get_transform(tf_buffer,"/world","/mocap_checkerboard")
@@ -315,5 +317,5 @@ if __name__ == '__main__':
             del tf_buffer[("/world","/kinect")]
             del tf_buffer[("/world","/checkerboard")]
             
-            
+            #rospy.sleep(0.1)
             
