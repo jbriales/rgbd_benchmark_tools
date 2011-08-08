@@ -214,10 +214,10 @@ if __name__ == '__main__':
     corners_y = 6
     checkerboard_size = 0.02
     checkerboard_points = numpy.matrix([
-        [0,(corners_x-1)*checkerboard_size,0,(corners_x-1)*checkerboard_size,-3*checkerboard_size,0],
-        [0,0,(corners_y-1)*checkerboard_size,(corners_y-1)*checkerboard_size,-3*checkerboard_size,0],
-        [0.0,0.0,0.0,0.0,0.0,0.20],
-        [1,1,1,1,1,1],
+        [0,(corners_x-1)*checkerboard_size,0,(corners_x-1)*checkerboard_size],
+        [0,0,(corners_y-1)*checkerboard_size,(corners_y-1)*checkerboard_size],
+        [0.0,0.0,0.0,0.0],
+        [1,1,1,1],
     ])
     
     mocap_points=numpy.zeros([3,0])
