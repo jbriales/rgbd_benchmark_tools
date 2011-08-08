@@ -1,6 +1,6 @@
 #!/usr/bin/python
 
-import roslib; roslib.load_manifest('kinect_bagtools')
+import roslib; roslib.load_manifest('rgbd_benchmark_tools')
 import rospy
 import rosbag
 import sensor_msgs.msg
@@ -17,12 +17,7 @@ import geometry_msgs
 import copy
 import cb_detector
 
-def transform44(ts):
-    return numpy.dot(tf.listener.xyz_to_mat44(ts.transform.translation), tf.listener.xyzw_to_mat44(ts.transform.rotation))
-
-if __name__ == '__main__':
-    
-    # parse command line
+def create_parser():
     parser = argparse.ArgumentParser(description='''
     This scripts reads a bag file containing kinect RGBD images and   
     estimates the calibration between the MoCap system and the Kinect optical frame using a Checkerboard or
@@ -44,7 +39,6 @@ if __name__ == '__main__':
     print "  out:",args.outputbag
     print
     
-    
     if args.start:
         print "  starting from: %s seconds"%(args.start)
     else:
@@ -52,10 +46,13 @@ if __name__ == '__main__':
         
     if args.duration:
         print "  duration: %s seconds"%(args.duration)
+    return args
 
-    # parse prop files
+
+def read_prop_files(filelist):
     model_points = {}
-    for propfile in args.prop:
+    # parse prop files
+    for propfile in filelist:
         lines = open(propfile,"r").readlines()
         prop = dict([line.strip().split("=") for line in lines if len(line.strip().split("="))==2])
         points = [line.split(",")[0:3] for line in lines[-int(prop["NumberOfMarkers"]):]]
@@ -65,63 +62,78 @@ if __name__ == '__main__':
         print "  object name:",prop["Name"].lower()
         print model_points[ prop["Name"].lower() ]
         print
-        
-    if "checkerboard" in model_points.keys():
-        points = numpy.matrix([
-                  [ 0.16, -0.02, -0.0 ],
-                  [ 0.16,  0.12, -0.0 ],
-                  [-0.02,  0.12, -0.0 ],
-                  [-0.008, -0.07, -0.0 ],
-                  [-0.02, -0.02, -0.0 ]
-                ])
-        obs_points = points - points.mean(0).repeat(points.shape[0],axis=0)
-        W = numpy.zeros( (3,3) )
-        for row in range(obs_points.shape[0]):
-            W += numpy.outer(obs_points[row,:],model_points["checkerboard"][row,:])
-        U,d,Vh = numpy.linalg.linalg.svd(W)
-        S = numpy.matrix(numpy.identity( 3 ))
-        if(numpy.linalg.det(U) * numpy.linalg.det(Vh)<0):
-            S[2,2] = -1
-        rot = U*S*Vh
-        trans = points.mean(0)
-        #print rot,trans
-        sqrErr =0
-        for row in range(obs_points.shape[0]):
-            err=points[row,:] - (rot*model_points["checkerboard"][row,:].transpose()).transpose() - trans
-            sqrErr += numpy.linalg.norm(err)
-        print sqrErr
-        mat44 = [
-                 [rot[0,0],rot[0,1],rot[0,2],trans[0,0]],
-                 [rot[1,0],rot[1,1],rot[1,2],trans[0,1]],
-                 [rot[2,0],rot[2,1],rot[2,2],trans[0,2]],
-                 [0,0,0,1]
-                 ]
-        xyz = tuple(tf.transformations.translation_from_matrix(mat44))[:3]
-        quat = tuple(tf.transformations.quaternion_from_matrix(mat44))
-        rgb_to_mocap_checkerboard = geometry_msgs.msg.TransformStamped()
-        rgb_to_mocap_checkerboard.transform.translation = geometry_msgs.msg.Vector3(*xyz)
-        rgb_to_mocap_checkerboard.transform.rotation = geometry_msgs.msg.Quaternion(*quat)
-        rgb_to_mocap_checkerboard.header.frame_id = "/rgb_checkerboard"
-        rgb_to_mocap_checkerboard.child_frame_id = "/mocap_checkerboard"
+    return model_points
 
+def align(model,data,desc=None):
+    model_zerocentered = model - model.mean(0).repeat(model.shape[0],axis=0)
+    W = numpy.zeros( (3,3) )
+    for row in range(model_zerocentered.shape[0]):
+        W += numpy.outer(model_zerocentered[row,:],data[row,:])
+    U,d,Vh = numpy.linalg.linalg.svd(W)
+    S = numpy.matrix(numpy.identity( 3 ))
+    if(numpy.linalg.det(U) * numpy.linalg.det(Vh)<0):
+        S[2,2] = -1
+    rot = U*S*Vh
+    trans = model.mean(0)
+    
+    if(desc):
+        sqrErr =0
+        for row in range(model.shape[0]):
+            err=points[row,:] - (rot*model.transpose()).transpose() - data
+            sqrErr += numpy.linalg.norm(err)
+            print "Alignment error for '%s' = %f"%(desc,sqrErr)
+    mat44 = [
+             [rot[0,0],rot[0,1],rot[0,2],trans[0,0]],
+             [rot[1,0],rot[1,1],rot[1,2],trans[0,1]],
+             [rot[2,0],rot[2,1],rot[2,2],trans[0,2]],
+             [0,0,0,1]
+             ]
+
+def get_rgb_to_mocap_checkerboard(model_points):
+    """This function computes the transform between the mocap markers in the mocap frame 
+       and the mocap markers in the frame of the optical checkerboard. 
+    """
+    points_oncheckerboard = numpy.matrix([
+              [ 0.16, -0.02, -0.0 ],
+              [ 0.16,  0.12, -0.0 ],
+              [-0.02,  0.12, -0.0 ],
+              [-0.008, -0.07, -0.0 ],
+              [-0.02, -0.02, -0.0 ]
+            ])
+    mat44 = align(points_oncheckerboard,model_points["checkerboard"])
+    
+    rgb_to_mocap_checkerboard = create_stamped_transform("/rgb_checkerboard","/mocap_checkerboard",mat44)
+    
+    
+    xyz = tuple(tf.transformations.translation_from_matrix(mat44))[:3]
+    quat = tuple(tf.transformations.quaternion_from_matrix(mat44))
+    rgb_to_mocap_checkerboard = geometry_msgs.msg.TransformStamped()
+    rgb_to_mocap_checkerboard.transform.translation = geometry_msgs.msg.Vector3(*xyz)
+    rgb_to_mocap_checkerboard.transform.rotation = geometry_msgs.msg.Quaternion(*quat)
+    rgb_to_mocap_checkerboard.header.frame_id = "/rgb_checkerboard"
+    rgb_to_mocap_checkerboard.child_frame_id = "/mocap_checkerboard"
+    return rgb_to_mocap_checkerboard
+
+if __name__ == '__main__':
+    args = create_parser()
+    model_points = read_prop_files(args.prop)
+    rgb_to_mocap_checkerboard = get_rgb_to_mocap_checkerboard(model_points)
+    
+    sys.exit()
+        
     inbag = rosbag.Bag(args.inputbag,'r')
 
     transformer = tf.TransformerROS()
     time_start = None
     detector = cb_detector.ImageCbDetectorNode()
     camera_info = None
-    sum_mat44_kinect_openni = numpy.matrix(numpy.zeros( (4,4) ))
-    count_mat44_kinect_openni = 0
-    mat44_kinect_openni_avg = None
     
     tf_buffer={}
     for topic, msg, t in inbag.read_messages():
-        if time_start==None:
-            time_start=t
-        if t - time_start < rospy.Duration.from_sec(float(args.start)):
-            continue
-        if args.duration and (t - time_start > rospy.Duration.from_sec(float(args.start) + float(args.duration))):
-            break
+        # print progress info
+        if time_start==None: time_start=t
+        if t - time_start < rospy.Duration.from_sec(float(args.start)): continue
+        if args.duration and (t - time_start > rospy.Duration.from_sec(float(args.start) + float(args.duration))): break
         print "t=%f\r"%(t-time_start).to_sec(),
         
         # this gives us the TF from /mocap to /Kinect 

@@ -38,7 +38,7 @@
 # Need to explicitly enable 'with' in python 2.5
 from __future__ import with_statement
 
-import roslib; roslib.load_manifest('kinect_bagtools')
+import roslib; roslib.load_manifest('rgbd_benchmark_tools')
 
 import rospy
 import cv
