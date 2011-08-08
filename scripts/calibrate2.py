@@ -123,11 +123,11 @@ def get_rgb_to_mocap_checkerboard(model_points,stamp):
        and the mocap markers in the frame of the optical checkerboard. 
     """
     points_oncheckerboard = numpy.matrix([
-              [ 0.16, -0.02, 0.005 ],
-              [ 0.16,  0.12, 0.005 ],
-              [-0.02,  0.12, 0.005 ],
-              [-0.008, -0.07, 0.005 ],
-              [-0.02, -0.02, 0.005 ]
+              [ 0.16, -0.02, -0.005 ],
+              [ 0.16,  0.12, -0.005 ],
+              [-0.02,  0.12, -0.005 ],
+              [-0.008, -0.07,-0.005 ],
+              [-0.02, -0.02, -0.005 ]
             ]).transpose()
     return align(points_oncheckerboard,model_points["checkerboard"],
                  "/checkerboard","/mocap_checkerboard",stamp)
@@ -222,7 +222,6 @@ if __name__ == '__main__':
     
     mocap_points=numpy.zeros([3,0])
     rgb_points=numpy.zeros([3,0])
-    #outbag = rosbag.Bag(args.outputbag, 'w', compression=rosbag.bag.Compression.BZ2)
     
     rospy.init_node('node_name')
     pub_tf = rospy.Publisher('/tf',tf.msg.tfMessage)
@@ -275,6 +274,11 @@ if __name__ == '__main__':
             if(transform==None):
                 continue
             
+            #print transform.transform.translation.z
+            if transform.transform.translation.z>0.5:
+                print "Checkerboard too far away (%0.2fm), skipping frame"%transform.transform.translation.z
+                continue
+            
             tf_buffer[ (transform.header.frame_id,transform.child_frame_id) ] = transform
         
             mat44_mocap_checkerboard = get_transform(tf_buffer,"/kinect","/mocap_checkerboard")
@@ -317,5 +321,10 @@ if __name__ == '__main__':
             del tf_buffer[("/world","/kinect")]
             del tf_buffer[("/world","/checkerboard")]
             
-            #rospy.sleep(0.1)
-            
+    #rospy.sleep(0.1)
+    print "Saving calibration data to",args.outputbag
+    outbag = rosbag.Bag(args.outputbag, 'w', compression=rosbag.bag.Compression.BZ2)
+    tfmsg = tf.msg.tfMessage()
+    tfmsg.transforms.append(tf_buffer[("/kinect","/openni_camera")])
+    outbag.write("/tf",tfmsg,t)
+    outbag.close()
