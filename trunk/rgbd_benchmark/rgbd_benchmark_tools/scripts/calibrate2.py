@@ -340,5 +340,7 @@ if __name__ == '__main__':
     outbag.write("/tf",tfmsg,t)
     outbag.close()
 
+    transform = align(rgb_points,mocap_points,"/kinect","/openni_camera",None,show_error=True)
+    print
     err = compute_error(rgb_points,mocap_points,transform)
     print "%f"%err
