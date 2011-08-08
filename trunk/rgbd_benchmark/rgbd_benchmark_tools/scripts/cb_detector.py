@@ -116,7 +116,7 @@ class ImageCbDetector:
       #cv.NamedWindow("image_scaled")
       #cv.ShowImage("image_scaled", image_scaled)
       #cv.WaitKey(600)
-      rospy.logwarn("Didn't find checkerboard")
+      print "Didn't find checkerboard\r",
       return (None, None)
 
 class ImageCbDetectorNode:

@@ -62,11 +62,21 @@ def read_prop_files(filelist):
         points = [line.split(",")[0:3] for line in lines[-int(prop["NumberOfMarkers"]):]]
         points = numpy.matrix([[float(n)*0.001 for n in p] for p in points])
         model_points[ prop["Name"].lower() ] = points.transpose()
-        print "Loaded prop file:",propfile
-        print "  object name:",prop["Name"].lower()
-        print model_points[ prop["Name"].lower() ]
-        print
+        #print "Loaded prop file:",propfile
+        #print "  object name:",prop["Name"].lower()
+        #print model_points[ prop["Name"].lower() ]
+        #print
     return model_points
+
+def compute_error(model,data,transformation):
+    mat44 = transform44(transformation) 
+    rot = mat44[0:3,0:3]
+    trans = mat44[0:3,3:4]
+    model_aligned = rot * model + trans
+    alignment_error = model_aligned - data
+    avg_err = numpy.sqrt(sum(sum(numpy.array(numpy.multiply(alignment_error,alignment_error)))) / model.shape[1])
+    return avg_err
+    
 
 def align(model,data,frame_id,child_frame_id,stamp=None,show_error=False):
     numpy.set_printoptions(precision=3,suppress=True)
@@ -98,7 +108,7 @@ def align(model,data,frame_id,child_frame_id,stamp=None,show_error=False):
     
     avg_err = numpy.sqrt(sum(sum(numpy.array(numpy.multiply(alignment_error,alignment_error)))) / model.shape[1])
     if(show_error):
-        print "Average error for '%s' to '%s' = %0.2fmm over n=%d points"%(frame_id,child_frame_id,avg_err*1000,model.shape[1])
+        print "Average error for '%s' to '%s' = %0.2fmm over n=%d points\r"%(frame_id,child_frame_id,avg_err*1000,model.shape[1]),
         
     mat44 = [
              [rot[0,0],rot[0,1],rot[0,2],trans[0]],
@@ -235,7 +245,7 @@ if __name__ == '__main__':
         if time_start==None: time_start=t
         if t - time_start < rospy.Duration.from_sec(float(args.start)): continue
         if args.duration and (t - time_start > rospy.Duration.from_sec(float(args.start) + float(args.duration))): break
-        print "t=%f\r"%(t-time_start).to_sec(),
+        #print "t=%f\r"%(t-time_start).to_sec(),
         
         # this gives us the TF from /world to /kinect and to /checkerboard
         #print topic 
@@ -276,7 +286,7 @@ if __name__ == '__main__':
             
             #print transform.transform.translation.z
             if transform.transform.translation.z>0.5:
-                print "Checkerboard too far away (%0.2fm), skipping frame"%transform.transform.translation.z
+                print "Checkerboard too far away (%0.2fm), skipping frame\r"%transform.transform.translation.z,
                 continue
             
             tf_buffer[ (transform.header.frame_id,transform.child_frame_id) ] = transform
@@ -284,11 +294,11 @@ if __name__ == '__main__':
             mat44_mocap_checkerboard = get_transform(tf_buffer,"/kinect","/mocap_checkerboard")
             mat44_rgb_checkerboard = get_transform(tf_buffer,"/openni_camera","/rgb_checkerboard")
             if mat44_mocap_checkerboard == None:
-                print "WARNING: couldn't resolve /kinect --> /mocap_checkerboard"
+                print "WARNING: couldn't resolve /kinect --> /mocap_checkerboard\r",
                 #print "TF keys: ",tf_buffer.keys()
                 continue
             if mat44_rgb_checkerboard == None:
-                print "WARNING: couldn't resolve /openni_camera --> /rgb_checkerboard"
+                print "WARNING: couldn't resolve /openni_camera --> /rgb_checkerboard\r",
                 #print "TF keys: ",tf_buffer.keys()
                 continue
             
@@ -299,6 +309,7 @@ if __name__ == '__main__':
             rgb_points = numpy.hstack((rgb_points,mat44_rgb_checkerboard.dot(checkerboard_points)[0:3,:]))
             
             transform = align(rgb_points,mocap_points,"/kinect","/openni_camera",msg.header.stamp,show_error=True)
+            
             tf_buffer[ (transform.header.frame_id,transform.child_frame_id) ] = transform
             
             mat44_calibrated_mocap_checkerboard = get_transform(tf_buffer,"/world","/mocap_checkerboard")
@@ -328,3 +339,6 @@ if __name__ == '__main__':
     tfmsg.transforms.append(tf_buffer[("/kinect","/openni_camera")])
     outbag.write("/tf",tfmsg,t)
     outbag.close()
+
+    err = compute_error(rgb_points,mocap_points,transform)
+    print "%f"%err
