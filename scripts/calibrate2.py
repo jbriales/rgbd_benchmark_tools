@@ -4,6 +4,7 @@ import roslib; roslib.load_manifest('rgbd_benchmark_tools')
 import rospy
 import rosbag
 import sensor_msgs.msg
+import visualization_msgs.msg
 import argparse
 import sys
 import os
@@ -98,7 +99,7 @@ def align(model,data,frame_id,child_frame_id,stamp=None,show_error=False):
     
     sqrErr = sum(sum(numpy.array(numpy.multiply(alignment_error,alignment_error)))) / model.shape[1]
     if(sqrErr>0.005 or show_error):
-        print "WARNING: Average error for '%s' to '%s' = %0.2fmm over n=%d points"%(frame_id,child_frame_id,sqrErr*1000,model.shape[1])
+        print "Average error for '%s' to '%s' = %0.2fmm over n=%d points"%(frame_id,child_frame_id,sqrErr*1000,model.shape[1])
         
     mat44 = [
              [rot[0,0],rot[0,1],rot[0,2],trans[0]],
@@ -118,7 +119,7 @@ def align(model,data,frame_id,child_frame_id,stamp=None,show_error=False):
     return stamped_transform
 
 
-def get_rgb_to_mocap_checkerboard(model_points):
+def get_rgb_to_mocap_checkerboard(model_points,stamp):
     """This function computes the transform between the mocap markers in the mocap frame 
        and the mocap markers in the frame of the optical checkerboard. 
     """
@@ -130,7 +131,7 @@ def get_rgb_to_mocap_checkerboard(model_points):
               [-0.02, -0.02, -0.05 ]
             ]).transpose()
     return align(points_oncheckerboard,model_points["checkerboard"],
-                 "/checkerboard","/mocap_checkerboard")
+                 "/checkerboard","/mocap_checkerboard",stamp)
 
 def detect_checkerboard(color_image,camera_info,child_frame_id):
     rgb_to_checkerboard = detector.detect(color_image,camera_info)
@@ -151,25 +152,51 @@ def detect_checkerboard(color_image,camera_info,child_frame_id):
 
 def get_transform(tf_buffer,from_frame,to_frame,visited_frames=[]):
     if from_frame == to_frame:
+#        print "identity"
         return numpy.eye(4,4)
-#    print "? %s --> %s"%(from_frame,to_frame)
     for (a,b),transform_a_b in tf_buffer.iteritems():
         if a in visited_frames or b in visited_frames: continue;
         if (a!=from_frame): continue;
+#        print "calling: %s to %s"%(b,to_frame)
         mat44_b_to = get_transform(tf_buffer,b,to_frame,visited_frames+[from_frame])
-        if tf:
-#            print "%s --> %s --> %s"%(from_frame,b,to_frame)
+        if mat44_b_to != None:
             mat44_a_b = transform44(transform_a_b)
+#            print "forward: %s --> %s --> %s"%(from_frame,b,to_frame)
+#            print mat44_a_b
+#            print mat44_b_to
             return mat44_a_b.dot(mat44_b_to)
-        
     for (a,b),transform_a_b in tf_buffer.iteritems():
         if a in visited_frames or b in visited_frames: continue;
         if (b!=from_frame): continue;
         mat44_a_to = get_transform(tf_buffer,a,to_frame,visited_frames+[from_frame])
-        if tf:
+        if mat44_a_to != None:
             mat44_b_a = numpy.linalg.inv(transform44(transform_a_b))
+#            print "reverse: %s --> %s --> %s"%(from_frame,b,to_frame)
+#            print mat44_b_a
+#            print mat44_a_to
             return mat44_b_a.dot(mat44_a_to)
+    return None
 
+def generate_marker(points,frame_id,stamp,r,g,b):
+    marker = visualization_msgs.msg.Marker()
+    marker.header.frame_id = frame_id
+    marker.header.stamp = stamp
+    marker.ns = "generated marker"
+    marker.id = 0;
+    marker.type = marker.POINTS
+    marker.action = marker.ADD
+    marker.pose.orientation.w = 1
+    marker.scale.x=0.005
+    marker.scale.y=0.005
+    marker.scale.z=0.005
+    marker.color.r=r;
+    marker.color.g=g;
+    marker.color.b=b;
+    marker.color.a=1.0;
+    marker.lifetime = rospy.Duration(0)
+    marker.points = [geometry_msgs.msg.Point( *points[:,column])  for column in range(points.shape[1]) ]
+    return marker
+    
 if __name__ == '__main__':
     args = create_parser()
     model_points = read_prop_files(args.prop)
@@ -183,24 +210,28 @@ if __name__ == '__main__':
     
     tf_buffer={}
     
-    # add transformation between optical checkerboard and mocap checkerboard
-    transform = get_rgb_to_mocap_checkerboard(model_points)
-    tf_buffer[ (transform.header.frame_id,transform.child_frame_id) ] = transform
-    
-    
     # we use the 4 checkerboard corner points used for calibration of mocap <--> rgb camera 
     corners_x = 8
     corners_y = 6
     checkerboard_size = 0.02
     checkerboard_points = numpy.matrix([
-        [0,0,0,0],
-        [0,corners_x*checkerboard_size,0,corners_x*checkerboard_size],
-        [0,0,corners_y*checkerboard_size,corners_y*checkerboard_size],
+        [0,(corners_x-1)*checkerboard_size,0,(corners_x-1)*checkerboard_size],
+        [0,0,(corners_y-1)*checkerboard_size,(corners_y-1)*checkerboard_size],
+        [0.0,0.0,0.0,0.0],
         [1,1,1,1],
     ])
     
     mocap_points=numpy.zeros([3,0])
     rgb_points=numpy.zeros([3,0])
+    #outbag = rosbag.Bag(args.outputbag, 'w', compression=rosbag.bag.Compression.BZ2)
+    
+    rospy.init_node('node_name')
+    pub_tf = rospy.Publisher('/tf',tf.msg.tfMessage)
+    pub_camera_info = rospy.Publisher('/camera/rgb/camera_info',sensor_msgs.msg.CameraInfo)
+    pub_image_color = rospy.Publisher('/camera/rgb/image_color',sensor_msgs.msg.Image)
+    pub_marker_mocap = rospy.Publisher('/markers_mocap',visualization_msgs.msg.Marker)
+    pub_marker_rgb = rospy.Publisher('/markers_rgb',visualization_msgs.msg.Marker)
+    
     for topic, msg, t in inbag.read_messages():
         # print progress info
         if time_start==None: time_start=t
@@ -208,7 +239,8 @@ if __name__ == '__main__':
         if args.duration and (t - time_start > rospy.Duration.from_sec(float(args.start) + float(args.duration))): break
         print "t=%f\r"%(t-time_start).to_sec(),
         
-        # this gives us the TF from /world to /kinect and to /checkerboard 
+        # this gives us the TF from /world to /kinect and to /checkerboard
+        #print topic 
         if topic=="/cortex_marker_array":
             for object in msg.markers:
                 if object.ns.lower() in model_points.keys():
@@ -224,7 +256,7 @@ if __name__ == '__main__':
                     transform = align(model_goodpoints,data_goodpoints,
                                                    "/world","/"+object.ns.lower(),object.header.stamp)
                     tf_buffer[ (transform.header.frame_id,transform.child_frame_id) ] = transform
-        
+                    
         # PART 2
         # this gives us the TF from /openni_rgb_optical_frame to / 
         if topic=="/camera/rgb/camera_info":
@@ -232,26 +264,56 @@ if __name__ == '__main__':
         if topic=="/tf":
             for transform in msg.transforms:
                 tf_buffer[ (transform.header.frame_id,transform.child_frame_id) ] = transform
+
+            # add fixed transformation between optical checkerboard and mocap checkerboard
+            transform = get_rgb_to_mocap_checkerboard(model_points,msg.transforms[0].header.stamp)
+            tf_buffer[ (transform.header.frame_id,transform.child_frame_id) ] = transform
+        
         if topic=="/camera/rgb/image_color" and camera_info:
             # detect checkerboard
             transform = detect_checkerboard(msg,camera_info,"/rgb_checkerboard")
             
-            if(transform):
-                tf_buffer[ (transform.header.frame_id,transform.child_frame_id) ] = transform
+            if(transform==None):
+                continue
+            
+            tf_buffer[ (transform.header.frame_id,transform.child_frame_id) ] = transform
         
             mat44_mocap_checkerboard = get_transform(tf_buffer,"/kinect","/mocap_checkerboard")
             mat44_rgb_checkerboard = get_transform(tf_buffer,"/openni_camera","/rgb_checkerboard")
             if mat44_mocap_checkerboard == None:
                 print "WARNING: couldn't resolve /kinect --> /mocap_checkerboard"
-                print "TF keys: ",tf_buffer.keys()
+                #print "TF keys: ",tf_buffer.keys()
                 continue
             if mat44_rgb_checkerboard == None:
                 print "WARNING: couldn't resolve /openni_camera --> /rgb_checkerboard"
-                print "TF keys: ",tf_buffer.keys()
+                #print "TF keys: ",tf_buffer.keys()
                 continue
             
             mocap_points = numpy.hstack((mocap_points,mat44_mocap_checkerboard.dot(checkerboard_points)[0:3,:]))
             rgb_points = numpy.hstack((rgb_points,mat44_rgb_checkerboard.dot(checkerboard_points)[0:3,:]))
             
-            align(mocap_points,rgb_points,"mocap","rgb",show_error=True)
+            transform = align(mocap_points,rgb_points,"/kinect","/openni_camera",msg.header.stamp,show_error=True)
+            tf_buffer[ (transform.header.frame_id,transform.child_frame_id) ] = transform
+            
+            mat44_calibrated_mocap_checkerboard = get_transform(tf_buffer,"/world","/mocap_checkerboard")
+            mat44_calibrated_rgb_checkerboard = get_transform(tf_buffer,"/world","/rgb_checkerboard")
+
+            marker_mocap = generate_marker(mat44_calibrated_mocap_checkerboard.dot(checkerboard_points)[0:3,:],
+                                           "/world",msg.header.stamp,1,0,0)
+            marker_rgb = generate_marker(mat44_calibrated_rgb_checkerboard.dot(checkerboard_points)[0:3,:],
+                                         "/world",msg.header.stamp,0,1,0)
+            
+            tfmsg = tf.msg.tfMessage()
+            tfmsg.transforms = tf_buffer.values()
+            
+            pub_tf.publish(tfmsg) 
+            pub_camera_info.publish(camera_info)
+            pub_image_color.publish(msg)
+            pub_marker_mocap.publish(marker_mocap) 
+            pub_marker_rgb.publish(marker_rgb) 
+            
+            del tf_buffer[("/world","/kinect")]
+            del tf_buffer[("/world","/checkerboard")]
+            
+            
             
