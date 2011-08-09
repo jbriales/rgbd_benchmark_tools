@@ -71,17 +71,23 @@ if __name__ == '__main__':
         print "t=%f\r"%(t-time_start).to_sec(),
         if topic == "/cortex_marker_array":
             cortex = msg
+            continue
         if topic == "/tf":
             for transform in msg.transforms:
                 transforms[ (transform.header.frame_id,transform.child_frame_id) ] = transform
+            continue
         if topic == "/imu":
             imu = msg
+            continue
         if topic == "/camera/depth/camera_info":
             depth_camera_info = msg
+            continue
         if topic == "/camera/rgb/camera_info":
             rgb_camera_info = msg
+            continue
         if topic == "/camera/depth/image" and depth_camera_info:
             depth_image = msg
+            continue
         if topic == "/camera/rgb/image_color" and rgb_camera_info and depth_camera_info and depth_image:
             rgb_image_color = msg
             # now process frame
@@ -179,6 +185,9 @@ if __name__ == '__main__':
                             0,0,0))
                 rgb_points.data = "".join(buffer)
                 outbag.write("/camera/rgb/points", rgb_points, t)                
+            continue
+        # anything else: pass thru
+        outbag.write(topic,msg,t)
                 
                 #print frame
                 
