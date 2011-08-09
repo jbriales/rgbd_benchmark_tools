@@ -78,11 +78,11 @@ exec_cmd rosbag info $f.bag
 
 # synchronize file
 exec_echo "Synchronizing data"
-exec_cmd scripts/synchronize.py $f.bag --delay 0.04
+exec_cmd scripts/synchronize.py $f.bag --delay 0.01
 
 # add groundtruth tf
 echo "Adding groundtruth and calibration"
-exec_cmd scripts/add_groundtruth.py --prop Kinect.prop --calibration calibration.bag $f-synced.bag
+exec_cmd scripts/add_groundtruth.py --prop Kinect.prop --calibration freiburg1/calibration.bag $f-synced.bag
 
 exec_echo "Extracting groundtruth"
 exec_cmd scripts/extract_groundtruth.py $f-synced-gt.bag
