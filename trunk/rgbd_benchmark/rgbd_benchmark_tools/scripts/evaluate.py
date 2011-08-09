@@ -4,6 +4,9 @@ import argparse
 import sys
 import os
 import numpy
+import pickle
+import matplotlib.pyplot as plt
+import matplotlib.pylab as pylab
 
 _EPS = numpy.finfo(float).eps * 4.0
 
@@ -39,9 +42,15 @@ def find_closest_stamp(stamps,t):
 def ominus(a,b):
     return numpy.dot(numpy.linalg.inv(a),b)
 
-def compute_err(param_delta,param_delay,traj_gt,traj_est,stamps_gt,stamps_est):
+def evaluate_trajectory(traj_gt,traj_est,param_delta=1.00,param_delay=0.01):
+    stamps_gt = list(traj_gt.keys())
+    stamps_gt.sort()
+    stamps_est = list(traj_est.keys())
+    stamps_est.sort()
+    
     err_trans = []
     err_rot = []
+    
     for stamp_est_0 in stamps_est:
         if stamp_est_0+param_delta > stamps_est[-1]: 
             break
@@ -56,28 +65,27 @@ def compute_err(param_delta,param_delay,traj_gt,traj_est,stamps_gt,stamps_est):
         
         err_trans.append( numpy.linalg.norm(error44[0:3,3]) )
         # an invitation to 3-d vision, p 27
-        err_rot.append( numpy.arccos( (numpy.trace(error44[0:3,0:3]) - 1)/2) )
+        err_rot.append( numpy.arccos( min(1,max(-1, (numpy.trace(error44[0:3,0:3]) - 1)/2) )) )
         
-    output =[]
-    output.append("translational_error.mean=%0.3fm"%(numpy.mean(err_trans)))
-    output.append("translational_error.std=%0.3fm"%(numpy.std(err_trans)))
-    output.append("translational_error.median=%0.3fm"%(numpy.median(err_trans)))
-    output.append("translational_error.min=%0.3fm"%(numpy.min(err_trans)))
-    output.append("translational_error.max=%0.3fm"%(numpy.max(err_trans)))
+    result ={}
+    result["parameter.time_delta"] = (float(param_delta),"s")
+    result["parameter.extra_delay"] = (float(param_delay),"s")
+    result["number_of_samples"] = (len(err_trans),"samples")
     
-    output.append("rotational_error.mean=%0.3frad"%(numpy.mean(err_rot)))
-    output.append("rotational_error.std=%0.3frad"%(numpy.std(err_rot)))
-    output.append("rotational_error.median=%0.3frad"%(numpy.median(err_rot)))
-    output.append("rotational_error.min=%0.3frad"%(numpy.min(err_rot)))
-    output.append("rotational_error.max=%0.3frad"%(numpy.max(err_rot)))
+    result["translational_error.mean"] = (numpy.mean(err_trans),"m")
+    result["translational_error.std"] = (numpy.std(err_trans),"m")
+    result["translational_error.median"] = (numpy.median(err_trans),"m")
+    result["translational_error.min"] = (numpy.min(err_trans),"m")
+    result["translational_error.max"] = (numpy.max(err_trans),"m")
     
-    output.append("rotational_error.mean.deg=%0.3fdeg"%(numpy.mean(err_rot)/numpy.pi*180))
-    output.append("rotational_error.std.deg=%0.3fdeg"%(numpy.std(err_rot)/numpy.pi*180))
-    output.append("rotational_error.median.deg=%0.3fdeg"%(numpy.median(err_rot)/numpy.pi*180))
-    output.append("rotational_error.min.deg=%0.3fdeg"%(numpy.min(err_rot)/numpy.pi*180))
-    output.append("rotational_error.max.deg=%0.3fdeg"%(numpy.max(err_rot)/numpy.pi*180))
+    result["rotational_error.mean"] = (numpy.mean(err_rot),"rad")
+    result["rotational_error.std"] = (numpy.std(err_rot),"rad")
+    result["rotational_error.median"] = (numpy.median(err_rot),"rad")
+    result["rotational_error.min"] = (numpy.min(err_rot),"rad")
+    result["rotational_error.max"] = (numpy.max(err_rot),"rad")
     
-    return output
+    return result
+
 
 
 if __name__ == '__main__':
@@ -88,38 +96,64 @@ if __name__ == '__main__':
     ''')
     parser.add_argument('groundtruth', help='groundtruth trajectory file (format: timestamp x y z qx qy qz qw)')
     parser.add_argument('estimated', help='estimated trajectory file (format: timestamp x y z qx qy qz qw)')
-    parser.add_argument('--delta', help='time delta for evaluation (see paper)',default=1.0)
-    parser.add_argument('--delay', help='time offset between files (0.0 if synced, otherwise )',default=0.0)
-#    parser.add_argument('--evaldelta', help='evaluate over different time deltas')
-#    parser.add_argument('--evaldelay', help='evaluate over different time delays')
+    parser.add_argument('--time_delta', help='time delta for evaluation (see paper)',default=1.0)
+    parser.add_argument('--extra_delay', help='time offset between files (0.0 if synced, otherwise )',default=0.0)
+    parser.add_argument('--eval_range', help='compute statistics over the whole range of possible time deltas', action='store_true')
+    parser.add_argument('--plot_file', help='plot results and save as PNG to PLOT')
     args = parser.parse_args()
+    
+    param_delta = float(args.time_delta)
+    param_delay = float(args.extra_delay)
     
     traj_gt = read_trajectory(args.groundtruth)
     traj_est = read_trajectory(args.estimated)
-    param_delta = float(args.delta)
-    param_delay = float(args.delay)
     
-    stamps_gt = list(traj_gt.keys())
-    stamps_gt.sort()
-    stamps_est = list(traj_est.keys())
-    stamps_est.sort()
+    if not args.eval_range and not args.plot_file:
+        result = evaluate_trajectory(traj_gt,traj_est,param_delta,param_delay)
+        keys = result.keys()
+        keys.sort()
+        print "".join("%s = %0.5f %s\n"%(key,result[key][0],result[key][1]) for key in keys)
+        sys.exit()
+        
+    if args.eval_range:
+        duration = numpy.max(traj_gt.keys()) - numpy.min(traj_gt.keys())
+        delta_range = []
+        delta = 1/30.0
+        while delta < duration/2.0:
+            delta_range.append(delta)
+            delta += 0.1
+        table = []
+        print "# time delta [s], avg. transl. error [m]"
+        for delta in delta_range:
+            result = evaluate_trajectory(traj_gt,traj_est,delta,param_delay)
+            table.append( (delta, result) )
+            print "%0.3f, %0.5f"%(delta,result["translational_error.mean"][0])
+            
+        #pickle.dump(table,open('result.dat','wb'))
 
-#    if args.evaldelta:
-#        for param_delta in numpy.arange(0,10,0.0333):
-#            err_trans = compute_err(param_delta,param_delay,traj_gt,traj_est,stamps_gt,stamps_est)    
-#            print param_delta, " ".join(str(f) for f in err_trans)
-#        sys.exit()
-#
-#    if args.evaldelay:
-#        for param_delay in numpy.arange(-0.1,0.1,0.01):
-#            err_trans = compute_err(param_delta,param_delay,traj_gt,traj_est,stamps_gt,stamps_est)    
-#            print param_delay, " ".join(str(f) for f in err_trans)
-#        sys.exit()
+    if args.plot_file:
+        #table = pickle.load(open('result.dat','rb'))
+        x =[delta for (delta,result) in table]
+        y_err_mean =[result["translational_error.mean"][0] for (delta,result) in table]
+        y_err_mean_pstd =[result["translational_error.mean"][0]
+                          +result["translational_error.std"][0] for (delta,result) in table]
+        y_err_mean_nstd =[result["translational_error.mean"][0]
+                          -result["translational_error.std"][0] for (delta,result) in table]
+        y_err_min =[result["translational_error.min"][0] for (delta,result) in table]
+        y_err_max =[result["translational_error.max"][0] for (delta,result) in table]
+        
+        #plt.semilogx()
+        fig = plt.figure()
+        ax = fig.add_subplot(111)        
+        
+        ax.fill_between(x,y_err_min,y_err_max,color='#cfcfff',facecolor='#cfcfff',label="min/max")
+        ax.fill_between(x,y_err_mean_nstd,y_err_mean_pstd,color='#afafff',facecolor='#afafff',label="std")
+        ax.plot(x,y_err_mean,'-',color="black")
+        #leg = ax.legend(('Model length'),'upper center', shadow=True)
+ #       plt.axis((x[0],x[-1],numpy.min(y),numpy.max(y)))
+        ax.set_xlabel('time delta [s]')
+        ax.set_ylabel('translational error [m]')
+        #plt.title(r'window size $\delta$ [s]', fontsize=20)
+        plt.savefig(args.plot_file)
 
-    output =[]
-    #output.append("trajectory.groundtruth=%s"%args.groundtruth)
-    #output.append("trajectory.estimated=%s"%args.estimated)
-    output.append("parameter.time_delta=%0.3fs"%param_delta)
-    #output.append("parameter.time_delay=%0.3fs"%param_delay)
-    output = output + compute_err(param_delta,param_delay,traj_gt,traj_est,stamps_gt,stamps_est)    
-    print "\n".join(str(f) for f in output)
+        
