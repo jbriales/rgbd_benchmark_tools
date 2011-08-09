@@ -139,7 +139,7 @@ if __name__ == '__main__':
                     pose.header = copy.deepcopy(object.header)
                     #pose.header.frame_id = object.header.frame_id
                     pose.header.frame_id = "/world"
-                    pose.child_frame_id = "/"+object.ns
+                    pose.child_frame_id = "/"+object.ns.lower()
                     tfmsg.transforms.append(pose)
 
             # update timestamps of calibration TFs

@@ -82,7 +82,7 @@ exec_cmd scripts/synchronize.py $f.bag --delay 0.02
 
 # add groundtruth tf
 echo "Adding groundtruth and calibration"
-exec_cmd scripts/add_groundtruth.py --prop Kinect.prop --calibration freiburg2/calibration.bag $f-synced.bag
+exec_cmd scripts/add_groundtruth.py --prop freiburg2/kinect.prop --calibration freiburg2/calibration.bag $f-synced.bag
 
 exec_echo "Extracting groundtruth"
 exec_cmd scripts/extract_groundtruth.py $f-synced-gt.bag

@@ -70,7 +70,7 @@ if __name__ == '__main__':
         if topic=="/tf":
             for transform in msg.transforms:
                 tf_buffer[ (transform.header.frame_id,transform.child_frame_id) ] = transform
-                if transform.child_frame_id=="/Kinect":
+                if transform.child_frame_id=="/kinect":
                     logtime = transform.header.stamp
             #print [(transform.header.frame_id,transform.child_frame_id) for transform in msg.transforms]
             # when we get an updated tranformation to the Kinect camera:
@@ -78,8 +78,8 @@ if __name__ == '__main__':
 #                print tr.header.stamp.secs,tr.header.stamp.nsecs,tr.header.frame_id,tr.child_frame_id
 
             try:
-                mat44_mocap_kinect = transform44(tf_buffer[("/world","/Kinect")])
-                mat44_kinect_openni = transform44(tf_buffer[("/Kinect","/openni_camera")])
+                mat44_mocap_kinect = transform44(tf_buffer[("/world","/kinect")])
+                mat44_kinect_openni = transform44(tf_buffer[("/kinect","/openni_camera")])
                 mat44_openni_rgb = transform44(tf_buffer[("/openni_camera","/openni_rgb_frame")])
                 mat44_rgb_optical = transform44(tf_buffer[("/openni_rgb_frame","/openni_rgb_optical_frame")])
                 
@@ -95,6 +95,7 @@ if __name__ == '__main__':
 #                    print "t=%3.5f"%logtime.to_sec()  
             except KeyError:
                 print "waiting for tf"
+                print "\n".join(["%s --> %s"%(a,b) for a,b in tf_buffer.keys()])
                 continue
             except:
                 raise
