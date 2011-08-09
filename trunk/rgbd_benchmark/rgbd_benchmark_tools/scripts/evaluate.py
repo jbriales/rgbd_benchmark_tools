@@ -121,7 +121,7 @@ if __name__ == '__main__':
         delta = 1/30.0
         while delta < duration/2.0:
             delta_range.append(delta)
-            delta += 0.1
+            delta += 1
         table = []
         print "# time delta [s], avg. transl. error [m]"
         for delta in delta_range:
