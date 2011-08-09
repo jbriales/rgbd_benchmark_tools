@@ -10,5 +10,5 @@ LOGFILE=freiburg1/delay.txt
 
 DELAY=0.01
 scripts/synchronize.py --delay $DELAY $ORIGINAL_BAG $SYNCED_BAG
-scripts/calibrate2.py $SYNCED_BAG $CALIBRATION_BAG $PROP
+scripts/calibrate.py $SYNCED_BAG $CALIBRATION_BAG $PROP
 
