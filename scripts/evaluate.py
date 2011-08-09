@@ -5,6 +5,7 @@ import sys
 import os
 import numpy
 import pickle
+import random
 import matplotlib
 matplotlib.use('Agg')
 import matplotlib.pyplot as plt
@@ -38,13 +39,31 @@ def read_trajectory(filename):
     traj = dict([(l[0],transform44(l[0:])) for l in list])
     return traj
 
-def find_closest_stamp(stamps,t):
+def find_closest_stamp2(stamps,t):
     return min([(abs(s-t),s) for s in stamps])[1]
+
+def find_closest_stamp(stamps,t):
+    beginning = 0
+    difference = abs(stamps[0] - t)
+    best = 0
+    end = len(stamps)
+    while beginning < end:
+        middle = (end+beginning)/2
+        if abs(stamps[middle] - t) < difference:
+            difference = abs(stamps[middle] - t)
+            best = stamps[middle]
+        if t == stamps[middle]:
+            return stamps[middle]
+        elif stamps[middle] > t:
+            end = middle
+        else:
+            beginning = middle + 1
+    return best
 
 def ominus(a,b):
     return numpy.dot(numpy.linalg.inv(a),b)
 
-def evaluate_trajectory(traj_gt,traj_est,param_delta=1.00,param_delay=0.01):
+def evaluate_trajectory(traj_gt,traj_est,param_delta=1.00,param_delay=0.01,downsample=0):
     stamps_gt = list(traj_gt.keys())
     stamps_gt.sort()
     stamps_est = list(traj_est.keys())
@@ -53,9 +72,14 @@ def evaluate_trajectory(traj_gt,traj_est,param_delta=1.00,param_delay=0.01):
     err_trans = []
     err_rot = []
     
-    for stamp_est_0 in stamps_est:
+    if downsample>0 and len(stamps_est)>downsample:
+        stamps_est_subset = random.sample(stamps_est,downsample)
+    else:
+        stamps_est_subset = stamps_est 
+        
+    for stamp_est_0 in stamps_est_subset:
         if stamp_est_0+param_delta > stamps_est[-1]: 
-            break
+            continue
         stamp_est_1 = find_closest_stamp(stamps_est,stamp_est_0 + param_delta)
         stamp_gt_0 = find_closest_stamp(stamps_gt,stamp_est_0 - param_delay)
         stamp_gt_1 = find_closest_stamp(stamps_gt,stamp_est_1 - param_delay)
@@ -120,10 +144,11 @@ if __name__ == '__main__':
     if args.eval_range:
         duration = numpy.max(traj_gt.keys()) - numpy.min(traj_gt.keys())
         delta_range = []
-        delta = 1/30.0
+        delta = 0
         while delta < duration/2.0:
+#        while delta < 2.0:
             delta_range.append(delta)
-            delta += 1
+            delta += 0.1
         table = []
         print "# time delta [s], avg. transl. error [m]"
         for delta in delta_range:
