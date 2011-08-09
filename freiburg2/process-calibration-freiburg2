@@ -1,8 +1,0 @@
-#!/bin/bash
-# generate calibration data
-
-cd $(rospack find rgbd_benchmark_tools)
-
-#scripts/synchronize.py --delay 0.04 /work/sturmju/freiburg2/bags-freiburg2/kinect_dataset_rgb_calibration.bag /work/sturmju/tmp/freiburg2/kinect_dataset_rgb_calibration-synced.bag
-
-scripts/calibrate.py --duration 5 --start 0 /work/sturmju/tmp/freiburg2/kinect_dataset_rgb_calibration-synced.bag freiburg2/calibration-freiburg2.bag --prop freiburg2/kinect.prop --prop freiburg2/checkerboard.prop
