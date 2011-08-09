@@ -36,7 +36,7 @@ print "  cortex delay:",args.delay
 
 buffer={}
 
-with rosbag.Bag(args.outputbag, 'w', compression=rosbag.bag.Compression.BZ2) as outbag:
+with rosbag.Bag(args.outputbag, 'w') as outbag: #, compression=rosbag.bag.Compression.BZ2
     for topic, msg, t in rosbag.Bag(args.inputbag).read_messages():
         # This also replaces tf timestamps under the assumption 
         # that all transforms in the message share the same timestamp

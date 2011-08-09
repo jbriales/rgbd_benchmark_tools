@@ -47,7 +47,7 @@ if __name__ == '__main__':
     print "  skipping %s blocks"%(args.skip)
 
     inbag = rosbag.Bag(args.inputbag,'r')
-    outbag = rosbag.Bag(args.outputbag, 'w', compression=rosbag.bag.Compression.BZ2)
+    outbag = rosbag.Bag(args.outputbag, 'w') #, compression=rosbag.bag.Compression.BZ2
     
     depth_camera_info = None
     rgb_camera_info = None
