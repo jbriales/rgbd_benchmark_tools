@@ -15,7 +15,7 @@
 #  ./process-file $fi 2>&1 | tee process-$(basename $fi).log &
 #done
 
-datasets="xyz rpy desk blumen coladose"
+datasets="xyz rpy desk coladose person teddy 360_hemisphere besteck_teller blumen blumen_brownbackground kugel2 kugel large_checkerboard_calibration large_no_loop large_with_loop pioneer_360 pioneer_pioneer2 pioneer_pioneer3 pioneer_slam 360_kidnap rgb_calibration ir_calibration"
 cd $(rospack find rgbd_benchmark_tools)
 
 for dataset in $datasets; do
