@@ -1,6 +1,6 @@
 #!/usr/bin/python
 
-import roslib; roslib.load_manifest('kinect_bagtools')
+import roslib; roslib.load_manifest('rgbd_benchmark_tools')
 import rosbag
 import tf, tf.msg
 import geometry_msgs.msg
