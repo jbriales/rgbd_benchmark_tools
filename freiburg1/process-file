@@ -78,7 +78,10 @@ exec_cmd rosbag info $f.bag
 
 # synchronize file
 exec_echo "Synchronizing data"
-exec_cmd scripts/synchronize.py $f.bag --delay 0.01
+while test -f /tmp/sync.lock; do sleep 5; done
+touch /tmp/sync.lock
+exec_cmd scripts/synchronize.py $f.bag --delay 0.02
+rm -r /tmp/sync.lock
 
 # add groundtruth tf
 echo "Adding groundtruth and calibration"
@@ -96,8 +99,8 @@ for hz in 2 5 10 30; do
 	exec_echo "..Processing of $f.bag at $hz Hz"
 	
 	# add pointclouds
-	exec_echo "..Downsampling to $hz Hz and adding point clouds"
-	exec_cmd scripts/add_points.py  --nth $[30/$hz] $f-synced-gt.bag $f-${hz}hz-synced-gt-points.bag
+	exec_echo "..Downsampling to $hz Hz"
+	exec_cmd scripts/add_points.py  --nopoints --nth $[30/$hz] $f-synced-gt.bag $f-${hz}hz-synced-gt-points.bag
 	
 	exec_cmd rosbag info $f-${hz}hz-synced-gt-points.bag
 	
@@ -124,7 +127,7 @@ for hz in 2 5 10 30; do
 	exec_cmd mv $f-${hz}hz-synced-gt-points-depth16 $f-${hz}hz-depth
 	
 	exec_echo "..Creating archive" 
-	exec_cmd cd $output_folder; tar cvzf $f-${hz}hz.tgz $f-${hz}hz-rgb $f-${hz}hz-depth $f-${hz}hz-groundtruth.txt $f-${hz}hz-imu.txt $f-statistics.txt $f-rgb.png $f-depth.png
+	exec_cmd cd $output_folder; tar cvzf $basename-${hz}hz.tgz $basename-${hz}hz-rgb $basename-${hz}hz-depth $basename-${hz}hz-groundtruth.txt $basename-${hz}hz-imu.txt $basename-statistics.txt $basename-rgb.png $basename-depth.png
 	exec_cmd cd $(rospack find rgbd_benchmark_tools)
 		
 	exec_echo "..Cleaning up"

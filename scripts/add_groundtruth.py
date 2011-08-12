@@ -55,7 +55,7 @@ if __name__ == '__main__':
         print "  duration: %s seconds"%(args.duration)
 
     inbag = rosbag.Bag(args.inputbag,'r')
-    outbag = rosbag.Bag(args.outputbag, 'w') #compression=rosbag.bag.Compression.BZ2
+    outbag = rosbag.Bag(args.outputbag, 'w',compression=rosbag.bag.Compression.BZ2)
 
     transformer = tf.TransformerROS()
     time_start = None

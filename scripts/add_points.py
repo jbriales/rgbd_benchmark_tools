@@ -27,6 +27,7 @@ if __name__ == '__main__':
     parser.add_argument('--duration', help='only process N seconds of  input bag file')
     parser.add_argument('--nth', help='only process every N-th frame of input bag file',default=1)
     parser.add_argument('--skip', help='skip N blocks in the beginning', default=1)
+    parser.add_argument('--nopoints', help='do not add point clouds', action='store_true')
     parser.add_argument('inputbag', help='input bag file')
     parser.add_argument('outputbag', nargs='?',help='output bag file')
     args = parser.parse_args()
@@ -47,7 +48,7 @@ if __name__ == '__main__':
     print "  skipping %s blocks"%(args.skip)
 
     inbag = rosbag.Bag(args.inputbag,'r')
-    outbag = rosbag.Bag(args.outputbag, 'w') #, compression=rosbag.bag.Compression.BZ2
+    outbag = rosbag.Bag(args.outputbag, 'w', compression=rosbag.bag.Compression.BZ2)
     
     depth_camera_info = None
     rgb_camera_info = None
@@ -85,11 +86,11 @@ if __name__ == '__main__':
         if topic == "/camera/rgb/camera_info":
             rgb_camera_info = msg
             continue
-        if topic == "/camera/depth/image" and depth_camera_info:
-            depth_image = msg
-            continue
-        if topic == "/camera/rgb/image_color" and rgb_camera_info and depth_camera_info and depth_image:
+        if topic == "/camera/rgb/image_color" and rgb_camera_info:
             rgb_image_color = msg
+            continue
+        if topic == "/camera/depth/image" and depth_camera_info and rgb_image_color and rgb_camera_info:
+            depth_image = msg
             # now process frame
             
             frame += 1
@@ -109,16 +110,20 @@ if __name__ == '__main__':
                 outbag.write("/camera/depth/image",depth_image,t)
                 outbag.write("/camera/rgb/camera_info",rgb_camera_info,t)
                 outbag.write("/camera/rgb/image_color",rgb_image_color,t)
+                # consume the images
+                imu = None
+                depth_image = None
+                rgb_image_color = None
 #                print depth_camera_info.header.stamp.to_sec()
 #                print depth_image.header.stamp.to_sec()
 #                print rgb_camera_info.header.stamp.to_sec()
 #                print rgb_image_color.header.stamp.to_sec()
 
                 # generate monochrome image from color image
-                cv_rgb_image_mono = bridge.imgmsg_to_cv(rgb_image_color, "mono8")
-                rgb_image_mono = bridge.cv_to_imgmsg(cv_rgb_image_mono)
-                rgb_image_mono.header = rgb_image_color.header
-                outbag.write("/camera/rgb/image_mono",rgb_image_mono,t)
+#                cv_rgb_image_mono = bridge.imgmsg_to_cv(rgb_image_color, "mono8")
+#                rgb_image_mono = bridge.cv_to_imgmsg(cv_rgb_image_mono)
+#                rgb_image_mono.header = rgb_image_color.header
+#                outbag.write("/camera/rgb/image_mono",rgb_image_mono,t)
                 
                 # generate depth and colored point cloud
                 cv_depth_image = bridge.imgmsg_to_cv(depth_image, "passthrough")
@@ -126,7 +131,9 @@ if __name__ == '__main__':
                 #cv.NamedWindow("image_scaled")
                 #cv.ShowImage("image_scaled", cv_rgb_image_color)
                 #cv.WaitKey(10)
-#    
+#                
+                if args.nopoints:
+                    continue
                 centerX = depth_camera_info.K[2]
                 centerY = depth_camera_info.K[5]
                 depthFocalLength = depth_camera_info.K[0]
