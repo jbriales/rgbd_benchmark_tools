@@ -93,6 +93,9 @@ if __name__ == '__main__':
             depth_image = msg
             # now process frame
             
+            if depth_image.header.stamp - rgb_image_color.header.stamp > rospy.Duration.from_sec(1/30.0):
+                continue
+            
             frame += 1
             if frame % float(args.nth) ==0:
                 if args.skip > 0:
