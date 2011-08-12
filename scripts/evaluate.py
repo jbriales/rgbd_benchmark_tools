@@ -45,7 +45,7 @@ def find_closest_stamp2(stamps,t):
 def find_closest_stamp(stamps,t):
     beginning = 0
     difference = abs(stamps[0] - t)
-    best = 0
+    best = stamps[0]
     end = len(stamps)
     while beginning < end:
         middle = (end+beginning)/2
@@ -71,6 +71,8 @@ def evaluate_trajectory(traj_gt,traj_est,param_delta=1.00,param_delay=0.01,downs
     
     err_trans = []
     err_rot = []
+    
+    print stamps_gt
     
     if downsample>0 and len(stamps_est)>downsample:
         stamps_est_subset = random.sample(stamps_est,downsample)
