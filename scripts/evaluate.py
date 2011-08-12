@@ -72,8 +72,6 @@ def evaluate_trajectory(traj_gt,traj_est,param_delta=1.00,param_delay=0.01,downs
     err_trans = []
     err_rot = []
     
-    print stamps_gt
-    
     if downsample>0 and len(stamps_est)>downsample:
         stamps_est_subset = random.sample(stamps_est,downsample)
     else:
