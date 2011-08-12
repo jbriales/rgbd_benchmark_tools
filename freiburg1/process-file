@@ -95,6 +95,9 @@ exec_echo "Extracting statistics"
 exec_cmd scripts/extract_statistics.py $f-groundtruth.txt
 exec_cmd mv $f-groundtruth-statistics.txt $f-statistics.txt
 
+exec_echo "..Downsampling to 2 Hz and adding point clouds for visual validation"
+exec_cmd scripts/add_points.py  --nopoints --nth 15 $f-synced-gt.bag $f-2hz-with-pointclouds.bag
+
 for hz in 2 5 10 30; do
 	exec_echo "..Processing of $f.bag at $hz Hz"
 	
