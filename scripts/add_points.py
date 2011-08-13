@@ -89,7 +89,7 @@ if __name__ == '__main__':
         if topic == "/camera/rgb/image_color" and rgb_camera_info:
             rgb_image_color = msg
             continue
-        if topic == "/camera/depth/image" and depth_camera_info and rgb_image_color and rgb_camera_info:
+        if topic == "/camera/depth/image" and depth_camera_info and rgb_image_color and rgb_camera_info and imu:
             depth_image = msg
             # now process frame
             
