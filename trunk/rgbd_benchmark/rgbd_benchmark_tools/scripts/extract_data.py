@@ -107,10 +107,10 @@ if __name__ == '__main__':
         if topic == "/camera/rgb/image_color":
             rgb_image_color = msg
             cv_rgb_image_color = bridge.imgmsg_to_cv(rgb_image_color, "bgr8")
-            cv.SaveImage(os.path.basename(rgbfile)+"/%f.png"%rgb_image_color.header.stamp.to_sec(),cv_rgb_image_color)
+            cv.SaveImage(rgbfile+"/%f.png"%rgb_image_color.header.stamp.to_sec(),cv_rgb_image_color)
             rgbstamps.write("%+5.4f, %s\n"%(
 		rgb_image_color.header.stamp.to_sec(),
-		rgbfile+"/%f.png"%rgb_image_color.header.stamp.to_sec()))
+		os.path.basename(rgbfile)+"/%f.png"%rgb_image_color.header.stamp.to_sec()))
         if topic == "/imu":
             imufile.write("%+5.4f, %+1.4f, %+1.4f, %+1.4f\n"%
                           (msg.header.stamp.to_sec(),
