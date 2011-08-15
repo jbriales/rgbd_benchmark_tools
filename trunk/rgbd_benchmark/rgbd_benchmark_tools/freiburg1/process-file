@@ -96,6 +96,7 @@ exec_cmd mv $f-synced-gt.bag $f.bag
 
 exec_echo "Extracting groundtruth"
 exec_cmd scripts/extract_groundtruth.py $f.bag
+exec_cmd mv $f.txt $f-groundtruth.txt
 
 exec_echo "Extracting statistics"
 exec_cmd scripts/extract_statistics.py $f-groundtruth.txt
