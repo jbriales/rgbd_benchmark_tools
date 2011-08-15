@@ -103,7 +103,7 @@ if __name__ == '__main__':
     s = """# ground truth trajectory
 # file: '%s'
 # time,tx,ty,tz,qx,qy,qz,qw
-"""%args.inputbag
+"""%os.path.basename(args.inputbag)
     k = log.keys()
     k.sort()
     for t in k:
