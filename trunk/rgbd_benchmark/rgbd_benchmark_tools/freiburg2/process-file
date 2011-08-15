@@ -87,10 +87,6 @@ rm -r /tmp/sync.lock
 echo "Adding groundtruth and calibration"
 exec_cmd scripts/add_groundtruth.py --prop freiburg2/kinect.prop --calibration freiburg2/calibration.bag $f-synced.bag
 
-exec_echo "Extracting statistics"
-exec_cmd scripts/extract_statistics.py $f-groundtruth.txt
-exec_cmd mv $f-groundtruth-statistics.txt $f-statistics.txt
-
 exec_echo "..Downsampling to 2 Hz and adding point clouds for visual validation"
 exec_cmd scripts/add_points.py  --nth 15 $f-synced-gt.bag $f-2hz-with-pointclouds.bag
 
@@ -100,6 +96,10 @@ exec_cmd mv $f-synced-gt.bag $f.bag
 
 exec_echo "Extracting groundtruth"
 exec_cmd scripts/extract_groundtruth.py $f.bag
+
+exec_echo "Extracting statistics"
+exec_cmd scripts/extract_statistics.py $f-groundtruth.txt
+exec_cmd mv $f-groundtruth-statistics.txt $f-statistics.txt
 
 # add export images 
 exec_echo "Extracting images"
