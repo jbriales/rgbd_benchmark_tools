@@ -91,7 +91,7 @@ if __name__ == '__main__':
                 
                 xyz = tuple(tf.transformations.translation_from_matrix(mat44))[:3]
                 quat = tuple(tf.transformations.quaternion_from_matrix(mat44))
-                log[logtime.to_sec()] =  "%+5.4f,    %+1.4f, %+1.4f, %+1.4f,    %+1.4f, %+1.4f, %+1.4f, %+1.4f"%(logtime.to_sec(),xyz[0],xyz[1],xyz[2],quat[0],quat[1],quat[2],quat[3])
+                log[logtime.to_sec()] =  "%5.4f, %1.4f, %1.4f, %1.4f, %1.4f, %1.4f, %1.4f, %1.4f"%(logtime.to_sec(),xyz[0],xyz[1],xyz[2],quat[0],quat[1],quat[2],quat[3])
 #                    print "t=%3.5f"%logtime.to_sec()  
             except KeyError:
                 print "waiting for tf"
