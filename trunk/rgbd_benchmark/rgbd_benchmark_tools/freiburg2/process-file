@@ -87,10 +87,6 @@ rm -r /tmp/sync.lock
 echo "Adding groundtruth and calibration"
 exec_cmd scripts/add_groundtruth.py --prop freiburg2/kinect.prop --calibration freiburg2/calibration.bag $f-synced.bag
 
-exec_echo "Extracting groundtruth"
-exec_cmd scripts/extract_groundtruth.py $f-synced-gt.bag
-exec_cmd mv $f-synced-gt.txt $f-groundtruth.txt 
-
 exec_echo "Extracting statistics"
 exec_cmd scripts/extract_statistics.py $f-groundtruth.txt
 exec_cmd mv $f-groundtruth-statistics.txt $f-statistics.txt
@@ -98,27 +94,27 @@ exec_cmd mv $f-groundtruth-statistics.txt $f-statistics.txt
 exec_echo "..Downsampling to 2 Hz and adding point clouds for visual validation"
 exec_cmd scripts/add_points.py  --nth 15 $f-synced-gt.bag $f-2hz-with-pointclouds.bag
 
-# add export images 
-exec_echo "..Extracting images"
-exec_cmd scripts/extract_data.py $f-synced-gt.bag
-exec_cmd cp $(find $f-synced-gt-rgb/*.png | head -n 1) $f-rgb.png
-exec_cmd mencoder mf://$f-synced-gt-rgb/*.png -mf fps=30:type=png -ovc lavc -lavcopts vcodec=mpeg4 -nosound -quiet -o $f-rgb.avi;
-exec_cmd cp $(find $f-synced-gt-depth8/*.png | head -n 1) $f-depth.png
-exec_cmd mencoder mf://$f-synced-gt-depth8/*.png -mf fps=30:type=png -ovc lavc -lavcopts vcodec=mpeg4 -nosound -quiet -o $f-depth.avi;
-	
 exec_echo "..Renaming files"
 exec_cmd mv $f.bag $f-original.bag
 exec_cmd mv $f-synced-gt.bag $f.bag
-exec_cmd mv $f-synced-gt-imu.txt $f-imu.txt
-exec_cmd mv $f-synced-gt-rgb $f-rgb
-exec_cmd mv $f-synced-gt-depth16 $f-depth
-	
+
+exec_echo "Extracting groundtruth"
+exec_cmd scripts/extract_groundtruth.py $f.bag
+
+# add export images 
+exec_echo "Extracting images"
+exec_cmd scripts/extract_data.py $f.bag
+exec_cmd cp $(find $f-rgb/*.png | head -n 1) $f-rgb.png
+exec_cmd mencoder mf://$f-rgb/*.png -mf fps=30:type=png -ovc lavc -lavcopts vcodec=mpeg4:vbitrate=2400 -nosound -quiet -o $f-rgb.avi;
+exec_cmd cp $(find $f-depth8/*.png | head -n 1) $f-depth.png
+exec_cmd mencoder mf://$f-depth8/*.png -mf fps=30:type=png -ovc lavc -lavcopts vcodec=mpeg4:vbitrate=2400 -nosound -quiet -o $f-depth.avi;
+		
 exec_echo "..Creating archive" 
-exec_cmd cd $output_folder; tar cvzf $basename.tgz $basename-rgb $basename-depth $basename-groundtruth.txt $basename-imu.txt $basename-statistics.txt
+exec_cmd cd $output_folder; tar cvzf $basename.tgz $basename-rgb $basename-depth $basename-rgb.txt $basename-depth.txt $basename-groundtruth.txt $basename-accelerometer.txt 
 exec_cmd cd $(rospack find rgbd_benchmark_tools)
 		
 exec_echo "..Cleaning up"
-exec_cmd rm -rf $f-synced-gt-depth8
+exec_cmd rm -rf $f-depth8
 exec_cmd rm -rf $f-rgb
 exec_cmd rm -rf $f-depth
 
