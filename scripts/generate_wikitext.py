@@ -72,8 +72,9 @@ def generate_wikitext(bagfile,name):
         output.append("movie from <a href='%s'>external</a> camera"%(url(extavi)))
 
     output.append("</td><td valign='top' width=250px>")
-    if "duration" in stat: output.append("Duration: %s<br>"%stat["duration"])
-    if "trajectory_length.translational" in stat: output.append("Trajectory length: %s<br>"%stat["trajectory_length.translational"])
+    if "duration" in stat: output.append("Duration: %s<br>"%(stat["duration"]))
+    if "duration.with_groundtruth" in stat: output.append("Duration with ground-truth: %s<br>"%(stat["duration.with_groundtruth"]))
+    if "trajectory_length.translational" in stat: output.append("Ground-truth trajectory length: %s<br>"%stat["trajectory_length.translational"])
     if "translational_velocity.mean" in stat: output.append("Avg. translational velocity: %s<br>"%stat["translational_velocity.mean"])
     if "angular_velocity.mean.deg" in stat: output.append("Avg. angular velocity: %s<br>"%stat["angular_velocity.mean.deg"])
     #output.append("Volume: %s x %s x %s<br>"%(stat["dimensions.x"],stat["dimensions.y"],stat["dimensions.z"]))

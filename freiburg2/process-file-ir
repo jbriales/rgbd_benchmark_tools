@@ -94,14 +94,6 @@ exec_echo "..Renaming files"
 exec_cmd mv $f.bag $f-original.bag
 exec_cmd mv $f-synced-gt.bag $f.bag
 
-exec_echo "Extracting groundtruth"
-exec_cmd scripts/extract_groundtruth.py $f.bag
-exec_cmd mv $f.txt $f-groundtruth.txt
-
-exec_echo "Extracting statistics"
-exec_cmd scripts/extract_statistics.py $f-groundtruth.txt
-exec_cmd mv $f-groundtruth-statistics.txt $f-statistics.txt
-
 # add export images 
 exec_echo "Extracting images"
 exec_cmd scripts/extract_data.py $f.bag
@@ -114,7 +106,7 @@ exec_cmd cp $(find $f-ir8/*.png | head -n 1) $f-ir.png
 exec_cmd mencoder mf://$f-ir8/*.png -mf fps=30:type=png -ovc lavc -lavcopts vcodec=mpeg4:vbitrate=2400 -nosound -quiet -o $f-ir.avi;
 		
 exec_echo "..Creating archive" 
-exec_cmd cd $output_folder; tar cvzf $basename.tgz $basename-rgb $basename-ir $basename-rgb.txt $basename-ir.txt $basename-groundtruth.txt $basename-accelerometer.txt 
+exec_cmd cd $output_folder; tar cvzf $basename.tgz $basename-rgb $basename-ir $basename-rgb.txt $basename-ir.txt $basename-accelerometer.txt 
 exec_cmd cd $(rospack find rgbd_benchmark_tools)
 		
 exec_echo "..Cleaning up"
