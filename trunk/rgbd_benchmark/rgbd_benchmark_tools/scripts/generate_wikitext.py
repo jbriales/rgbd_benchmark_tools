@@ -19,81 +19,68 @@ def url(filename):
     if not filename.startswith(file_prefix):
         raise Exception("wrong file prefix: %s, should have %s"%(filename,file_prefix))
     return url_prefix+filename[len(file_prefix):]
-
-if len(sys.argv)<3 or os.path.splitext(sys.argv[1])[1]!=".html":
-    print "Usage: generate_wikitext.py <output.html> <dataset1.bag> .."
-    sys.exit()
     
-htmlfile = sys.argv[1]
-
-# arguments are bag file names
-output=[]
-for bagfile in sys.argv[2:]:
+def generate_wikitext(bagfile,name):
+    # arguments are bag file names
+    output=[]
     filename = os.path.splitext(bagfile)[0]
-    seqname = os.path.split(filename)[1][15:]
+    seqname = os.path.split(filename)[1][13:]
+    stat=dict()
     statfile = os.path.splitext(bagfile)[0] + "-statistics.txt"
-    stat=dict([line.strip().split("=") for line in open(statfile)])
+    if os.path.exists(statfile):
+        stat=dict([line.strip().split("=") for line in open(statfile)])
     infofile = os.path.splitext(bagfile)[0] + "-info.txt"
     if os.path.exists(infofile):    
         info="".join(open(infofile).readlines())
     else:
         info="(no additional info available)"
     
-    originalbag = "%s.bag"%(filename)
-    originalgt = "%s-groundtruth.txt"%(filename)
     rgbpng = "%s-rgb.png"%(filename)
     depthpng = "%s-depth.png"%(filename)
     
-    hz=30
     extavi = "%s-external.avi"%(filename)
-    rgbavi = "%s-%dhz-rgb.avi"%(filename,hz)
-    depthavi = "%s-%dhz-depth.avi"%(filename,hz)
-    gt = "%s-groundtruth.txt"%(filename)
+    rgbavi = "%s-rgb.avi"%(filename)
+    depthavi = "%s-depth.avi"%(filename)
 
     output.append("<table border=0><tr>")
-    output.append("<td><img src='%s' width=120/><br><img src='%s' width=120/></td>"%
-                  (url(rgbpng),url(depthpng)))
+    output.append("<td width=130px>")
+    if os.path.exists(rgbpng):
+        output.append("<img src='%s' width=120/><br>"%url(rgbpng))
+    if os.path.exists(depthpng):
+        output.append("<img src='%s' width=120/><br>"%url(depthpng))
+    output.append("</td>")
     output.append("<td valign='top'>")
-    output.append("<b>Sequence '%s'</b><br>"%seqname)
+    output.append("<b><a name='%s'>Sequence '%s'</a></b><br>"%(seqname,seqname))
     output.append("<i>%s</i><br>"%info)
     output.append("<br>")
     
-    output.append("<table border=0><tr><td valign='top' width='300px'>")
-    output.append("Duration: %s<br>"%stat["duration"])
-    output.append("Trajectory length: %s<br>"%stat["trajectory_length.translational"])
-    output.append("Avg. translational velocity: %s<br>"%stat["translational_velocity.mean"])
-    output.append("Avg. angular velocity: %s<br>"%stat["angular_velocity.mean.deg"])
+    bag = "%s.bag"%(filename)
+    rgbavi = "%s-rgb.avi"%(filename)
+    depthavi = "%s-depth.avi"%(filename)
+    tgz = "%s.tgz"%(filename)
+    output.append("<table border=0><tr><td valign='top' width='250px'>")
+    output.append("Download this dataset as <br>")
+    if os.path.exists(tgz):
+        output.append("<a href='%s'>tgz</a> archieve or "%(url(tgz)))
+    if os.path.exists(bag):
+        output.append("<a href='%s'>ROS bag</a> file<br><br> "%(url(bag)))
+    if os.path.exists(rgbavi):
+        output.append("<a href='%s'>RGB</a> movie<br> "%(url(rgbavi)))
+    if os.path.exists(depthavi):
+        output.append("<a href='%s'>depth</a> movie<br> "%(url(depthavi)))
+    if os.path.exists(extavi):
+        output.append("movie from <a href='%s'>external</a> camera"%(url(extavi)))
+
+    output.append("</td><td valign='top' width=250px>")
+    if "duration" in stat: output.append("Duration: %s<br>"%stat["duration"])
+    if "trajectory_length.translational" in stat: output.append("Trajectory length: %s<br>"%stat["trajectory_length.translational"])
+    if "translational_velocity.mean" in stat: output.append("Avg. translational velocity: %s<br>"%stat["translational_velocity.mean"])
+    if "angular_velocity.mean.deg" in stat: output.append("Avg. angular velocity: %s<br>"%stat["angular_velocity.mean.deg"])
     #output.append("Volume: %s x %s x %s<br>"%(stat["dimensions.x"],stat["dimensions.y"],stat["dimensions.z"]))
 
-
-    output.append("</td><td valign='top'>")
-    for hz in [2,5,10,30]:
-        bag = "%s-%dhz.bag"%(filename,hz)
-        rgbavi = "%s-%dhz-rgb.avi"%(filename,hz)
-        depthavi = "%s-%dhz-depth.avi"%(filename,hz)
-        tgz = "%s-%dhz.tgz"%(filename,hz)
-        gt = "%s-%dhz-groundtruth.txt"%(filename,hz)
-        imu = "%s-%dhz-imu.txt"%(filename,hz)
-        output.append("%dHz: "%hz)
-        output.append("<a href='%s'>tgz</a>, "%(url(tgz)))
-        output.append("<a href='%s'>bag</a><br> "%(url(tgz)))
-        #output.append("<a href='%s'>groundtruth</a>, "%gt)
-    output.append("</td></tr>")
-
-    output.append("<tr><td>")
-    output.append("<a href='%s'>original</a> data<br> "%(url(originalbag)))
-    output.append("<a href='http://cvpr.in.tum.de/data/datasets/rgbd-dataset/intrinsic_calibration'>intrinsic</a> camera parameters<br>")
-    output.append("<a href='%s'>extrinsic</a> camera parameters (=ground-truth trajectory)<br>"%(url(originalgt)))
-    
-    output.append("</td><td>")
-    output.append("<a href='%s'>RGB</a> movie<br> "%(url(rgbavi)))
-    output.append("<a href='%s'>depth</a> movie<br> "%(url(depthavi)))
-    output.append("<a href='%s'>external</a> camera"%(url(extavi)))
+    output.append("</td></tr></table>")
     output.append("</td></tr></table><br>")
-    output.append("</td></tr></table><br>")
-            
-    
-s = "\n".join(output)
-f = open(htmlfile,"w")
-f.write(s)
-f.close()
+
+    s = "\n".join(output)
+    return s
+
