@@ -80,7 +80,7 @@ if __name__ == '__main__':
         if args.duration and (t - time_start > rospy.Duration.from_sec(float(args.start) + float(args.duration))):
             break
         print "t=%f\r"%(t-time_start).to_sec(),
-        if topic == "/camera/depth/image":
+        if topic == "/camera/depth/image" or topic == "/camera/ir/image_raw":
             depth_image = msg
             cv_depth_image = bridge.imgmsg_to_cv(depth_image, "passthrough")
             img = cv.CreateImage( (640,480), 8, 1)

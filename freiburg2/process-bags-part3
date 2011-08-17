@@ -16,6 +16,7 @@
 #done
 
 datasets="large_no_loop large_with_loop pioneer_360 pioneer_pioneer2 pioneer_pioneer3 pioneer_slam 360_kidnap rgb_calibration ir_calibration"
+datasets="ir_calibration"
 cd $(rospack find rgbd_benchmark_tools)
 
 for dataset in $datasets; do
