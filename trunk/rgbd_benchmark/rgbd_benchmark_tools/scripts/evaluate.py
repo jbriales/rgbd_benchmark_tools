@@ -106,8 +106,6 @@ def evaluate_trajectory(traj_gt,traj_est,param_delta=1.00,param_delay=0.01,downs
     
     return result
 
-
-
 if __name__ == '__main__':
     
     # parse command line
