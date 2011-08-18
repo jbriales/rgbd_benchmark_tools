@@ -69,6 +69,7 @@ function exec_cmd()
 # cd to the tools folder
 exec_cmd date
 exec_cmd cd $(rospack find rgbd_benchmark_tools)
+
 exec_cmd svn info
 
 exec_echo "Copying file to working dir"
@@ -97,11 +98,7 @@ exec_cmd mv $f-synced-gt.bag $f.bag
 # add export images 
 exec_echo "Extracting images"
 exec_cmd scripts/extract_data.py $f.bag
-exec_cmd mv $f-depth8 $f-ir8
-exec_cmd mv $f-depth $f-ir
-exec_cmd mv $f-depth.txt $f-ir.txt
-exec_cmd cp $(find $f-rgb/*.png | head -n 1) $f-rgb.png
-exec_cmd mencoder mf://$f-rgb/*.png -mf fps=30:type=png -ovc lavc -lavcopts vcodec=mpeg4:vbitrate=2400 -nosound -quiet -o $f-rgb.avi;
+
 exec_cmd cp $(find $f-ir8/*.png | head -n 1) $f-ir.png
 exec_cmd mencoder mf://$f-ir8/*.png -mf fps=30:type=png -ovc lavc -lavcopts vcodec=mpeg4:vbitrate=2400 -nosound -quiet -o $f-ir.avi;
 		
