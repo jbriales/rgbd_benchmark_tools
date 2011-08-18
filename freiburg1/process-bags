@@ -15,8 +15,7 @@
 #  ./process-file $fi 2>&1 | tee process-$(basename $fi).log &
 #done
 
-datasets="xyz rpy desk desk2 room 360 floor plant teddy rgb_calibration ir_calibration"
-datasets="ir_calibration"
+datasets="xyz rpy desk desk2 room 360 floor plant teddy rgb_calibration"
 cd $(rospack find rgbd_benchmark_tools)
 
 for dataset in $datasets; do
@@ -24,3 +23,7 @@ for dataset in $datasets; do
   ln -s /work/sturmju/freiburg1/original_bags/kinect_dataset_$dataset-info.txt /tmp/rgbd_dataset_freiburg1_$dataset-info.txt
   freiburg1/process-file /tmp/rgbd_dataset_freiburg1_$dataset.bag /work/sturmju/tmp/freiburg1
 done 
+
+ln -s /work/sturmju/freiburg1/original_bags/kinect_dataset_ir_calibration.bag /tmp/rgbd_dataset_freiburg1_ir_calibration.bag
+ln -s /work/sturmju/freiburg1/original_bags/kinect_dataset_ir_calibration-info.txt /tmp/rgbd_dataset_freiburg1_ir_calibration-info.txt
+freiburg1/process-file-ir /tmp/rgbd_dataset_freiburg1_ir_calibration.bag /work/sturmju/tmp/freiburg1

@@ -15,6 +15,7 @@ datasets = [
                  "freiburg1/room",
                  "freiburg1/360",
                  "freiburg2/desk",
+                 "freiburg2/person",
                  "freiburg2/360_hemisphere",
                  "freiburg2/360_kidnap",
                  "freiburg2/large_no_loop",

@@ -122,7 +122,7 @@ if __name__ == '__main__':
         		os.path.basename(rgbfile)+"/%f.png"%rgb_image_color.header.stamp.to_sec()))
         if topic == "/camera/ir/image_raw":
             ir_image = msg
-            cv_ir_image = bridge.imgmsg_to_cv(ir_image, "passthrough")
+            cv_ir_image = bridge.imgmsg_to_cv(ir_image, "mono8")
             cv.SaveImage(irfile+"/%f.png"%ir_image.header.stamp.to_sec(),cv_ir_image)
             irstamps.write("%+5.4f, %s\n"%(
                 ir_image.header.stamp.to_sec(),

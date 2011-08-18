@@ -8,12 +8,12 @@ file_prefix = "/usr/wiss/sturmju/public_html/"
 #url_prefix = "/home/sturmju/Desktop/tmp/" 
 url_prefix = "http://www9.in.tum.de/~sturmju/" 
 
-def fileinfo(filename):
+def gbsize(filename):
     if os.path.exists(filename):
         size = os.stat(filename).st_size;
-        return "%0.1fMB"%(size / (1024*1024));
+        return (size / float(1024*1024*1024));
     else:
-        return "n/a"
+        return -1
 
 def url(filename):
     if not filename.startswith(file_prefix):
@@ -67,7 +67,8 @@ def generate_wikitext(bagfile,name):
     if os.path.exists(tgz):
         output.append("<a href='%s'>tgz</a> archieve or "%(url(tgz)))
     if os.path.exists(bag):
-        output.append("<a href='%s'>ROS bag</a> file<br><br> "%(url(bag)))
+        output.append("<a href='%s'>ROS bag</a> file<br> "%(url(bag)))
+        output.append("(file size: %0.2fGB)<br><br>"%gbsize(bag))
     if os.path.exists(rgbavi):
         output.append("<a href='%s'>RGB</a> movie<br> "%(url(rgbavi)))
     if os.path.exists(depthavi):
@@ -83,6 +84,8 @@ def generate_wikitext(bagfile,name):
     if "trajectory_length.translational" in stat: output.append("Ground-truth trajectory length: %s<br>"%stat["trajectory_length.translational"])
     if "translational_velocity.mean" in stat: output.append("Avg. translational velocity: %s<br>"%stat["translational_velocity.mean"])
     if "angular_velocity.mean.deg" in stat: output.append("Avg. angular velocity: %s<br>"%stat["angular_velocity.mean.deg"])
+    if "angular_velocity.mean.deg" in stat: output.append("Avg. angular velocity: %s<br>"%stat["angular_velocity.mean.deg"])
+    if "dimensions.x" in stat: output.append("Dimensions: %s x %s x %s<br>"%(stat["dimensions.x"],stat["dimensions.y"],stat["dimensions.z"]))
     #output.append("Volume: %s x %s x %s<br>"%(stat["dimensions.x"],stat["dimensions.y"],stat["dimensions.z"]))
 
     output.append("</td></tr></table>")
