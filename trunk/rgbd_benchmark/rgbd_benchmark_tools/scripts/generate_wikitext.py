@@ -84,8 +84,7 @@ def generate_wikitext(bagfile,name):
     if "trajectory_length.translational" in stat: output.append("Ground-truth trajectory length: %s<br>"%stat["trajectory_length.translational"])
     if "translational_velocity.mean" in stat: output.append("Avg. translational velocity: %s<br>"%stat["translational_velocity.mean"])
     if "angular_velocity.mean.deg" in stat: output.append("Avg. angular velocity: %s<br>"%stat["angular_velocity.mean.deg"])
-    if "angular_velocity.mean.deg" in stat: output.append("Avg. angular velocity: %s<br>"%stat["angular_velocity.mean.deg"])
-    if "dimensions.x" in stat: output.append("Dimensions: %s x %s x %s<br>"%(stat["dimensions.x"],stat["dimensions.y"],stat["dimensions.z"]))
+    if "dimensions.x" in stat: output.append("Trajectory dim.: %s x %s x %s<br>"%(stat["dimensions.x"],stat["dimensions.y"],stat["dimensions.z"]))
     #output.append("Volume: %s x %s x %s<br>"%(stat["dimensions.x"],stat["dimensions.y"],stat["dimensions.z"]))
 
     output.append("</td></tr></table>")

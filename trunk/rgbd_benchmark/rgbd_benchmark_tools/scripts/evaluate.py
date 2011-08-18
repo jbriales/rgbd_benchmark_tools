@@ -7,12 +7,6 @@ import argparse
 import sys
 import os
 import numpy
-import pickle
-import random
-import matplotlib
-matplotlib.use('Agg')
-import matplotlib.pyplot as plt
-import matplotlib.pylab as pylab
 
 _EPS = numpy.finfo(float).eps * 4.0
 
@@ -41,9 +35,6 @@ def read_trajectory(filename):
     list = [[float(v.strip()) for v in line.split(" ") if v.strip()!=""] for line in lines if len(line)>0 and line[0]!="#"]
     traj = dict([(l[0],transform44(l[0:])) for l in list])
     return traj
-
-def find_closest_stamp2(stamps,t):
-    return min([(abs(s-t),s) for s in stamps])[1]
 
 def find_closest_stamp(stamps,t):
     beginning = 0
@@ -126,9 +117,8 @@ if __name__ == '__main__':
     parser.add_argument('groundtruth', help='groundtruth trajectory file (format: timestamp x y z qx qy qz qw)')
     parser.add_argument('estimated', help='estimated trajectory file (format: timestamp x y z qx qy qz qw)')
     parser.add_argument('--time_delta', help='time delta for evaluation (see paper)',default=1.0)
-    parser.add_argument('--extra_delay', help='time offset between files (0.0 if synced, otherwise )',default=0.0)
-    parser.add_argument('--eval_range', help='compute statistics over the whole range of possible time deltas', action='store_true')
-    parser.add_argument('--plot_file', help='plot results and save as PNG to PLOT')
+    parser.add_argument('--extra_delay', help='time offset between files (0.0 if synced, otherwise)',default=0.0)
+    parser.add_argument('--full', help='print all evaluation data (otherwise, only the mean translational error measured in meters will be printed)', action='store_true')
     args = parser.parse_args()
     
     param_delta = float(args.time_delta)
@@ -137,53 +127,11 @@ if __name__ == '__main__':
     traj_gt = read_trajectory(args.groundtruth)
     traj_est = read_trajectory(args.estimated)
     
-    if not args.eval_range and not args.plot_file:
-        result = evaluate_trajectory(traj_gt,traj_est,param_delta,param_delay)
+    result = evaluate_trajectory(traj_gt,traj_est,param_delta,param_delay)
+    if args.full:
         keys = list(result.keys())
         keys.sort()
         print("".join("%s = %0.5f %s\n"%(key,result[key][0],result[key][1]) for key in keys))
-        sys.exit()
-        
-    if args.eval_range:
-        duration = numpy.max(traj_gt.keys()) - numpy.min(traj_gt.keys())
-        delta_range = []
-        delta = 0
-        while delta < duration/2.0:
-#        while delta < 2.0:
-            delta_range.append(delta)
-            delta += 0.1
-        table = []
-        print("# time delta [s], avg. transl. error [m]")
-        for delta in delta_range:
-            result = evaluate_trajectory(traj_gt,traj_est,delta,param_delay)
-            table.append( (delta, result) )
-            print "%0.3f, %0.5f"%(delta,result["translational_error.mean"][0])
-            
-        #pickle.dump(table,open('result.dat','wb'))
+    else:
+        print result["translational_error.mean"][0]
 
-    if args.plot_file:
-        #table = pickle.load(open('result.dat','rb'))
-        x =[delta for (delta,result) in table]
-        y_err_mean =[result["translational_error.mean"][0] for (delta,result) in table]
-        y_err_mean_pstd =[result["translational_error.mean"][0]
-                          +result["translational_error.std"][0] for (delta,result) in table]
-        y_err_mean_nstd =[result["translational_error.mean"][0]
-                          -result["translational_error.std"][0] for (delta,result) in table]
-        y_err_min =[result["translational_error.min"][0] for (delta,result) in table]
-        y_err_max =[result["translational_error.max"][0] for (delta,result) in table]
-        
-        #plt.semilogx()
-        fig = plt.figure()
-        ax = fig.add_subplot(111)        
-        
-        ax.fill_between(x,y_err_min,y_err_max,color='#cfcfff',facecolor='#cfcfff',label="min/max")
-        ax.fill_between(x,y_err_mean_nstd,y_err_mean_pstd,color='#afafff',facecolor='#afafff',label="std")
-        ax.plot(x,y_err_mean,'-',color="black")
-        #leg = ax.legend(('Model length'),'upper center', shadow=True)
- #       plt.axis((x[0],x[-1],numpy.min(y),numpy.max(y)))
-        ax.set_xlabel('time delta [s]')
-        ax.set_ylabel('translational error [m]')
-        #plt.title(r'window size $\delta$ [s]', fontsize=20)
-        plt.savefig(args.plot_file)
-
-        
