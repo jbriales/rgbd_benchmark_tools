@@ -95,18 +95,18 @@ exec_cmd cp $(find $f-ir/*.png | head -n 1) $f-ir.png
 exec_cmd mencoder mf://$f-ir/*.png -mf fps=30:type=png -ovc lavc -lavcopts vcodec=mpeg4:vbitrate=2400 -nosound -quiet -o $f-ir.avi;
 		
 exec_echo "..Creating archive" 
-exec_cmd mkdir $basename
-exec_cmd mv $basename-rgb rgb
-exec_cmd mv $basename-ir ir
-exec_cmd mv $basename-rgb.txt rgb.txt
-exec_cmd mv $basename-ir.txt ir.txt
-exec_cmd mv $basename-accelerometer.txt accelerometer.txt
+exec_cmd mkdir $f
+exec_cmd mv $f-rgb $f/rgb
+exec_cmd mv $f-ir $f/ir
+exec_cmd mv $f-rgb.txt $f/rgb.txt
+exec_cmd mv $f-ir.txt $f/ir.txt
+exec_cmd mv $f-accelerometer.txt $f/accelerometer.txt
 exec_cmd cd $output_folder; tar cvzf $basename.tgz $basename 
 exec_cmd cd $(rospack find rgbd_benchmark_tools)
 		
 exec_echo "..Cleaning up"
 exec_cmd rm -rf $f-depth8
-exec_cmd rm -rf $basename
+exec_cmd rm -rf $f
 
 exec_echo "Cleaning up"
 exec_cmd rm -rf $f-synced.bag
