@@ -118,6 +118,8 @@ exec_echo "..Cleaning up"
 exec_cmd rm -rf $f-depth8
 exec_cmd rm -rf $f-rgb
 exec_cmd rm -rf $f-depth
+exec_cmd rm -rf $f-ir
+exec_cmd rm -rf $f-ir.txt
 
 exec_echo "Cleaning up"
 exec_cmd rm -rf $f-synced.bag

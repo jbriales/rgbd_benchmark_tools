@@ -37,10 +37,12 @@ def generate_wikitext(bagfile,name):
     
     rgbpng = "%s-rgb.png"%(filename)
     depthpng = "%s-depth.png"%(filename)
+    irpng = "%s-ir.png"%(filename)
     
     extavi = "%s-external.avi"%(filename)
     rgbavi = "%s-rgb.avi"%(filename)
     depthavi = "%s-depth.avi"%(filename)
+    iravi = "%s-ir.avi"%(filename)
 
     output.append("<table border=0><tr>")
     output.append("<td width=130px>")
@@ -48,6 +50,8 @@ def generate_wikitext(bagfile,name):
         output.append("<img src='%s' width=120/><br>"%url(rgbpng))
     if os.path.exists(depthpng):
         output.append("<img src='%s' width=120/><br>"%url(depthpng))
+    if not os.path.exists(depthpng):
+        output.append("<img src='%s' width=120/><br>"%url(irpng))
     output.append("</td>")
     output.append("<td valign='top'>")
     output.append("<b><a name='%s'>Sequence '%s'</a></b><br>"%(seqname,seqname))
@@ -68,8 +72,10 @@ def generate_wikitext(bagfile,name):
         output.append("<a href='%s'>RGB</a> movie<br> "%(url(rgbavi)))
     if os.path.exists(depthavi):
         output.append("<a href='%s'>depth</a> movie<br> "%(url(depthavi)))
+    if os.path.exists(iravi):
+        output.append("<a href='%s'>IR (infrared)</a> movie<br> "%(url(iravi)))
     if os.path.exists(extavi):
-        output.append("movie from <a href='%s'>external</a> camera"%(url(extavi)))
+        output.append("<a href='%s'>external</a> camera view"%(url(extavi)))
 
     output.append("</td><td valign='top' width=250px>")
     if "duration" in stat: output.append("Duration: %s<br>"%(stat["duration"]))
