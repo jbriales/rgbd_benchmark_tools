@@ -57,7 +57,7 @@ def find_closest_stamp(stamps,t):
 def ominus(a,b):
     return numpy.dot(numpy.linalg.inv(a),b)
 
-def evaluate_trajectory(traj_gt,traj_est,param_delta=1.00,param_delay=0.01,downsample=0):
+def evaluate_trajectory(traj_gt,traj_est,param_delta=1.00,param_delay=0.01):
     stamps_gt = list(traj_gt.keys())
     stamps_gt.sort()
     stamps_est = list(traj_est.keys())
@@ -66,12 +66,7 @@ def evaluate_trajectory(traj_gt,traj_est,param_delta=1.00,param_delay=0.01,downs
     err_trans = []
     err_rot = []
     
-    if downsample>0 and len(stamps_est)>downsample:
-        stamps_est_subset = random.sample(stamps_est,downsample)
-    else:
-        stamps_est_subset = stamps_est 
-        
-    for stamp_est_0 in stamps_est_subset:
+    for stamp_est_0 in stamps_est:
         if stamp_est_0+param_delta > stamps_est[-1]: 
             continue
         stamp_est_1 = find_closest_stamp(stamps_est,stamp_est_0 + param_delta)
