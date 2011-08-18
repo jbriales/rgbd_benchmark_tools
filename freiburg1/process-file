@@ -116,7 +116,7 @@ exec_cmd mv $f-rgb $f/rgb
 exec_cmd mv $f-depth $f/depth  
 exec_cmd mv $f-rgb.txt $f/rgb.txt
 exec_cmd mv $f-depth.txt $f/depth.txt
-exec_cmd mv $f-groundtruth.txt $f/groundtruth.txt
+exec_cmd cp $f-groundtruth.txt $f/groundtruth.txt
 exec_cmd mv $f-accelerometer.txt $f/accelerometer.txt
 exec_cmd cd $output_folder; tar cvzf $basename.tgz $basename 
 exec_cmd cd $(rospack find rgbd_benchmark_tools)
