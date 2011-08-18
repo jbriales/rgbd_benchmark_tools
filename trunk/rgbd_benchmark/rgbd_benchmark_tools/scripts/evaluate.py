@@ -1,4 +1,7 @@
 #!/usr/bin/python
+#
+# Requirements: 
+# sudo apt-get install python-argparse
 
 import argparse
 import sys
@@ -48,7 +51,7 @@ def find_closest_stamp(stamps,t):
     best = stamps[0]
     end = len(stamps)
     while beginning < end:
-        middle = (end+beginning)/2
+        middle = int((end+beginning)/2)
         if abs(stamps[middle] - t) < difference:
             difference = abs(stamps[middle] - t)
             best = stamps[middle]
@@ -136,9 +139,9 @@ if __name__ == '__main__':
     
     if not args.eval_range and not args.plot_file:
         result = evaluate_trajectory(traj_gt,traj_est,param_delta,param_delay)
-        keys = result.keys()
+        keys = list(result.keys())
         keys.sort()
-        print "".join("%s = %0.5f %s\n"%(key,result[key][0],result[key][1]) for key in keys)
+        print("".join("%s = %0.5f %s\n"%(key,result[key][0],result[key][1]) for key in keys))
         sys.exit()
         
     if args.eval_range:
@@ -150,7 +153,7 @@ if __name__ == '__main__':
             delta_range.append(delta)
             delta += 0.1
         table = []
-        print "# time delta [s], avg. transl. error [m]"
+        print("# time delta [s], avg. transl. error [m]")
         for delta in delta_range:
             result = evaluate_trajectory(traj_gt,traj_est,delta,param_delay)
             table.append( (delta, result) )

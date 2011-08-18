@@ -84,30 +84,23 @@ touch /tmp/sync.lock
 exec_cmd scripts/synchronize.py $f.bag --delay 0.02
 rm -r /tmp/sync.lock
 
-# add groundtruth tf
-echo "Adding groundtruth and calibration"
-exec_cmd scripts/add_groundtruth.py --prop freiburg1/Kinect.prop --calibration freiburg1/calibration.bag $f-synced.bag
-
-exec_echo "..Downsampling to 2 Hz and adding point clouds for visual validation"
-exec_cmd scripts/add_points.py  --nth 15 $f-synced-gt.bag $f-2hz-with-pointclouds.bag
-
-exec_echo "..Renaming files"
 exec_cmd mv $f.bag $f-original.bag
-exec_cmd mv $f-synced-gt.bag $f.bag
+exec_cmd mv $f-synced.bag $f.bag
 
 # add export images 
 exec_echo "Extracting images"
 exec_cmd scripts/extract_data.py $f.bag
 
-exec_cmd cp $(find $f-ir8/*.png | head -n 1) $f-ir.png
-exec_cmd mencoder mf://$f-ir8/*.png -mf fps=30:type=png -ovc lavc -lavcopts vcodec=mpeg4:vbitrate=2400 -nosound -quiet -o $f-ir.avi;
+exec_cmd cp $(find $f-ir/*.png | head -n 1) $f-ir.png
+exec_cmd mencoder mf://$f-ir/*.png -mf fps=30:type=png -ovc lavc -lavcopts vcodec=mpeg4:vbitrate=2400 -nosound -quiet -o $f-ir.avi;
 		
 exec_echo "..Creating archive" 
 exec_cmd cd $output_folder; tar cvzf $basename.tgz $basename-rgb $basename-ir $basename-rgb.txt $basename-ir.txt $basename-accelerometer.txt 
 exec_cmd cd $(rospack find rgbd_benchmark_tools)
 		
 exec_echo "..Cleaning up"
-exec_cmd rm -rf $f-ir8
+exec_cmd rm -rf $f-depth8
+exec_cmd rm -rf $f-depth
 exec_cmd rm -rf $f-rgb
 exec_cmd rm -rf $f-ir
 

@@ -37,6 +37,10 @@ if __name__ == '__main__':
     depthfile8 = os.path.splitext(args.inputbag)[0] + "-depth8"
     if not os.path.isdir(depthfile8): 
         os.mkdir(depthfile8)
+    irstamps = os.path.splitext(args.inputbag)[0] + "-ir.txt"
+    irfile = os.path.splitext(args.inputbag)[0] + "-ir"
+    if not os.path.isdir(irfile): 
+        os.mkdir(irfile)
     imufile = os.path.splitext(args.inputbag)[0] + "-accelerometer.txt"
       
     print "Processing bag file:"
@@ -60,6 +64,7 @@ if __name__ == '__main__':
     imufile = open(imufile,"w")
     rgbstamps = open(rgbstamps,"w")
     depthstamps = open(depthstamps,"w")
+    irstamps = open(irstamps,"w")
     imufile.write("""# accelerometer data
 # file: '%s'
 # timestamp,ax,ay,az
@@ -72,6 +77,10 @@ if __name__ == '__main__':
 # file: '%s'
 # timestamp,filename
 """%os.path.basename(args.inputbag))
+    irstamps.write("""# ir (infrared) images
+# file: '%s'
+# timestamp,filename
+"""%os.path.basename(args.inputbag))
     for topic, msg, t in inbag.read_messages():
         if time_start==None:
             time_start=t
@@ -80,7 +89,7 @@ if __name__ == '__main__':
         if args.duration and (t - time_start > rospy.Duration.from_sec(float(args.start) + float(args.duration))):
             break
         print "t=%f\r"%(t-time_start).to_sec(),
-        if topic == "/camera/depth/image" or topic == "/camera/ir/image_raw":
+        if topic == "/camera/depth/image":
             depth_image = msg
             cv_depth_image = bridge.imgmsg_to_cv(depth_image, "passthrough")
             img = cv.CreateImage( (640,480), 8, 1)
@@ -109,8 +118,15 @@ if __name__ == '__main__':
             cv_rgb_image_color = bridge.imgmsg_to_cv(rgb_image_color, "bgr8")
             cv.SaveImage(rgbfile+"/%f.png"%rgb_image_color.header.stamp.to_sec(),cv_rgb_image_color)
             rgbstamps.write("%+5.4f, %s\n"%(
-		rgb_image_color.header.stamp.to_sec(),
-		os.path.basename(rgbfile)+"/%f.png"%rgb_image_color.header.stamp.to_sec()))
+        		rgb_image_color.header.stamp.to_sec(),
+        		os.path.basename(rgbfile)+"/%f.png"%rgb_image_color.header.stamp.to_sec()))
+        if topic == "/camera/ir/image_raw":
+            ir_image = msg
+            cv_ir_image = bridge.imgmsg_to_cv(ir_image, "passthrough")
+            cv.SaveImage(irfile+"/%f.png"%ir_image.header.stamp.to_sec(),cv_ir_image)
+            irstamps.write("%+5.4f, %s\n"%(
+                ir_image.header.stamp.to_sec(),
+                os.path.basename(irfile)+"/%f.png"%ir_image.header.stamp.to_sec()))
         if topic == "/imu":
             imufile.write("%+5.4f, %+1.4f, %+1.4f, %+1.4f\n"%
                           (msg.header.stamp.to_sec(),
@@ -121,4 +137,5 @@ if __name__ == '__main__':
     imufile.close()
     rgbstamps.close()
     depthstamps.close()
+    irstamps.close()
 
