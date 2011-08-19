@@ -69,6 +69,8 @@ def generate_wikitext(bagfile,name):
     if os.path.exists(bag):
         output.append("<a href='%s'>ROS bag</a> file<br> "%(url(bag)))
         output.append("(file size: %0.2fGB)<br><br>"%gbsize(bag))
+    else:
+        print("Warning: %s not found"%bag)
     if os.path.exists(rgbavi):
         output.append("<a href='%s'>RGB</a> movie<br> "%(url(rgbavi)))
     if os.path.exists(depthavi):
