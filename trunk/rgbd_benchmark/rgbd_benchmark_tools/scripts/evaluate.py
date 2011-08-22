@@ -59,11 +59,26 @@ def find_closest_stamp(stamps,t):
 def ominus(a,b):
     return numpy.dot(numpy.linalg.inv(a),b)
 
-def evaluate_trajectory(traj_gt,traj_est,param_delta=1.00,param_offset=0.01):
+def evaluate_trajectory(traj_gt,traj_est,param_delta=1.00,param_offset=0.01,store_individual_errors=False):
     stamps_gt = list(traj_gt.keys())
     stamps_gt.sort()
     stamps_est = list(traj_est.keys())
     stamps_est.sort()
+
+    result ={}
+    result["parameter.time_delta"] = (float(param_delta),"s")
+    result["parameter.time_offset"] = (float(param_offset),"s")
+
+    interval_gt = [abs(a-b) for a,b in zip(stamps_gt[:-1],stamps_gt[1:])]
+    interval_est = [abs(a-b) for a,b in zip(stamps_est[:-1],stamps_est[1:])]
+    
+    result["input.groundtruth.samples"] = (float(len(stamps_gt)),"samples")
+    result["input.estimated.samples"] = (float(len(stamps_est)),"samples")
+    result["input.groundtruth.interval.median"] = (numpy.median(interval_gt),"s")
+    result["input.groundtruth.duration"] = (len(stamps_gt) * numpy.median(interval_gt),"s")
+    result["input.estimated.interval.median"] = (numpy.median(interval_est),"s")
+    result["input.estimated.duration"] = (len(stamps_est) * numpy.median(interval_est),"s")
+    result["input.coverage"] = (result["input.estimated.duration"][0] / result["input.groundtruth.duration"][0],"")
     
     err_trans = []
     err_rot = []
@@ -84,16 +99,20 @@ def evaluate_trajectory(traj_gt,traj_est,param_delta=1.00,param_offset=0.01):
         error44 = ominus(  ominus( traj_est[stamp_est_1], traj_est[stamp_est_0] ),
                            ominus( traj_gt[stamp_gt_1], traj_gt[stamp_gt_0] ) )
         
-        err_trans.append( numpy.linalg.norm(error44[0:3,3]) )
+        trans = numpy.linalg.norm(error44[0:3,3])
+        err_trans.append( trans )
         # an invitation to 3-d vision, p 27
-        err_rot.append( numpy.arccos( min(1,max(-1, (numpy.trace(error44[0:3,0:3]) - 1)/2) )) )
+        rot = numpy.arccos( min(1,max(-1, (numpy.trace(error44[0:3,0:3]) - 1)/2) ))
+        err_rot.append( rot )
+        
+        if store_individual_errors:
+            result["translational_error.list[%f]"%stamp_est_0] = (trans,"m") 
+            result["rotational_error.list[%f]"%stamp_est_0] = (trans,"m") 
 
+        
     if(len(matches_difference)/2<2):
         raise Exception("Couldn't find matching timestamp pairs between groundtruth and estimated trajectory!")
         
-    result ={}
-    result["parameter.time_delta"] = (float(param_delta),"s")
-    result["parameter.extra_delay"] = (float(param_offset),"s")
     result["evaluation.number_of_samples"] = (len(err_trans),"samples")
     result["evaluation.number_of_matches"] = (len(matches_difference)/2,"samples")
     
@@ -115,29 +134,31 @@ def evaluate_trajectory(traj_gt,traj_est,param_delta=1.00,param_offset=0.01):
     result["rotational_error.min"] = (numpy.min(err_rot),"rad")
     result["rotational_error.max"] = (numpy.max(err_rot),"rad")
     
+    
     return result
 
 if __name__ == '__main__':
     
     # parse command line
     parser = argparse.ArgumentParser(description='''
-    This script reads a groundtruth trajectory and an estimated trajectory, and computes the translational error.
+    This script reads a ground-truth trajectory and an estimated trajectory, and computes the translational error.
     ''')
-    parser.add_argument('groundtruth', help='groundtruth trajectory file (format: timestamp x y z qx qy qz qw)')
-    parser.add_argument('estimated', help='estimated trajectory file (format: timestamp x y z qx qy qz qw)')
-    parser.add_argument('--time_delta', help='time delta for evaluation (see paper)',default=1.0)
-    parser.add_argument('--offset', help='time offset between ground-truth and estimated trajectory (0.0 if synced, otherwise)',default=0.0)
-    parser.add_argument('--full', help='print all evaluation data (otherwise, only the mean translational error measured in meters will be printed)', action='store_true')
+    parser.add_argument('groundtruth_file', help='ground-truth trajectory file (format: "timestamp tx ty tz qx qy qz qw")')
+    parser.add_argument('estimated_file', help='estimated trajectory file (format: "timestamp tx ty tz qx qy qz qw")')
+    parser.add_argument('--time_delta', help='time delta for evaluation (default: 1.0)',default=1.0)
+    parser.add_argument('--offset', help='time offset between ground-truth and estimated trajectory (default: 0.0)',default=0.0)
+    parser.add_argument('--verbose', help='print all evaluation data (otherwise, only the mean translational error measured in meters will be printed)', action='store_true')
+    parser.add_argument('--store_individual_errors', help='additional store the individual errors (use with --verbose)', action='store_true')
     args = parser.parse_args()
     
     param_delta = float(args.time_delta)
     param_offset = float(args.offset)
     
-    traj_gt = read_trajectory(args.groundtruth)
-    traj_est = read_trajectory(args.estimated)
+    traj_gt = read_trajectory(args.groundtruth_file)
+    traj_est = read_trajectory(args.estimated_file)
     
-    result = evaluate_trajectory(traj_gt,traj_est,param_delta,param_offset)
-    if args.full:
+    result = evaluate_trajectory(traj_gt,traj_est,param_delta,param_offset,args.store_individual_errors)
+    if args.verbose:
         keys = list(result.keys())
         keys.sort()
         print("".join("%s = %0.5f %s\n"%(key,result[key][0],result[key][1]) for key in keys))
