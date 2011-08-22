@@ -1,5 +1,0 @@
-<launch>
-
-  <include file="$(find openni_camera_unstable)/launch/openni.launch" />
-
-</launch>
