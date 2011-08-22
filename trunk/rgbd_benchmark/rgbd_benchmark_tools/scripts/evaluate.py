@@ -59,7 +59,7 @@ def find_closest_stamp(stamps,t):
 def ominus(a,b):
     return numpy.dot(numpy.linalg.inv(a),b)
 
-def evaluate_trajectory(traj_gt,traj_est,param_delta=1.00,param_delay=0.01):
+def evaluate_trajectory(traj_gt,traj_est,param_delta=1.00,param_offset=0.01):
     stamps_gt = list(traj_gt.keys())
     stamps_gt.sort()
     stamps_est = list(traj_est.keys())
@@ -73,8 +73,8 @@ def evaluate_trajectory(traj_gt,traj_est,param_delta=1.00,param_delay=0.01):
         if stamp_est_0+param_delta > stamps_est[-1]: 
             continue
         stamp_est_1 = find_closest_stamp(stamps_est,stamp_est_0 + param_delta)
-        stamp_gt_0 = find_closest_stamp(stamps_gt,stamp_est_0 - param_delay)
-        stamp_gt_1 = find_closest_stamp(stamps_gt,stamp_est_1 - param_delay)
+        stamp_gt_0 = find_closest_stamp(stamps_gt,stamp_est_0 - param_offset)
+        stamp_gt_1 = find_closest_stamp(stamps_gt,stamp_est_1 - param_offset)
         
         matches_difference.append( abs(stamp_est_0 - stamp_gt_0) )
         matches_difference.append( abs(stamp_est_1 - stamp_gt_1) )
@@ -93,7 +93,7 @@ def evaluate_trajectory(traj_gt,traj_est,param_delta=1.00,param_delay=0.01):
         
     result ={}
     result["parameter.time_delta"] = (float(param_delta),"s")
-    result["parameter.extra_delay"] = (float(param_delay),"s")
+    result["parameter.extra_delay"] = (float(param_offset),"s")
     result["evaluation.number_of_samples"] = (len(err_trans),"samples")
     result["evaluation.number_of_matches"] = (len(matches_difference)/2,"samples")
     
@@ -126,17 +126,17 @@ if __name__ == '__main__':
     parser.add_argument('groundtruth', help='groundtruth trajectory file (format: timestamp x y z qx qy qz qw)')
     parser.add_argument('estimated', help='estimated trajectory file (format: timestamp x y z qx qy qz qw)')
     parser.add_argument('--time_delta', help='time delta for evaluation (see paper)',default=1.0)
-    parser.add_argument('--extra_delay', help='time offset between files (0.0 if synced, otherwise)',default=0.0)
+    parser.add_argument('--offset', help='time offset between ground-truth and estimated trajectory (0.0 if synced, otherwise)',default=0.0)
     parser.add_argument('--full', help='print all evaluation data (otherwise, only the mean translational error measured in meters will be printed)', action='store_true')
     args = parser.parse_args()
     
     param_delta = float(args.time_delta)
-    param_delay = float(args.extra_delay)
+    param_offset = float(args.offset)
     
     traj_gt = read_trajectory(args.groundtruth)
     traj_est = read_trajectory(args.estimated)
     
-    result = evaluate_trajectory(traj_gt,traj_est,param_delta,param_delay)
+    result = evaluate_trajectory(traj_gt,traj_est,param_delta,param_offset)
     if args.full:
         keys = list(result.keys())
         keys.sort()
