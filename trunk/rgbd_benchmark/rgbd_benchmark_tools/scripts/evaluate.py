@@ -31,9 +31,11 @@ def transform44(l):
         ), dtype=numpy.float64)
 
 def read_trajectory(filename):
-    lines = open(filename).read().replace(","," ").replace("\t"," ").split("\n") 
+    file = open(filename)
+    data = file.read()
+    lines = data.replace(","," ").replace("\t"," ").split("\n") 
     list = [[float(v.strip()) for v in line.split(" ") if v.strip()!=""] for line in lines if len(line)>0 and line[0]!="#"]
-    traj = dict([(l[0],transform44(l[0:])) for l in list])
+    traj = dict([(l[0],transform44(l[0:])) for l in list if l[4:8]!=[0,0,0,0]])
     return traj
 
 def find_closest_stamp(stamps,t):
@@ -66,12 +68,16 @@ def evaluate_trajectory(traj_gt,traj_est,param_delta=1.00,param_delay=0.01):
     err_trans = []
     err_rot = []
     
+    matches_difference = []
     for stamp_est_0 in stamps_est:
         if stamp_est_0+param_delta > stamps_est[-1]: 
             continue
         stamp_est_1 = find_closest_stamp(stamps_est,stamp_est_0 + param_delta)
         stamp_gt_0 = find_closest_stamp(stamps_gt,stamp_est_0 - param_delay)
         stamp_gt_1 = find_closest_stamp(stamps_gt,stamp_est_1 - param_delay)
+        
+        matches_difference.append( abs(stamp_est_0 - stamp_gt_0) )
+        matches_difference.append( abs(stamp_est_1 - stamp_gt_1) )
         
         #print stamp_est_0,stamp_est_1,stamp_gt_0,stamp_gt_1
         
@@ -81,11 +87,21 @@ def evaluate_trajectory(traj_gt,traj_est,param_delta=1.00,param_delay=0.01):
         err_trans.append( numpy.linalg.norm(error44[0:3,3]) )
         # an invitation to 3-d vision, p 27
         err_rot.append( numpy.arccos( min(1,max(-1, (numpy.trace(error44[0:3,0:3]) - 1)/2) )) )
+
+    if(len(matches_difference)/2<2):
+        raise Exception("Couldn't find matching timestamp pairs between groundtruth and estimated trajectory!")
         
     result ={}
     result["parameter.time_delta"] = (float(param_delta),"s")
     result["parameter.extra_delay"] = (float(param_delay),"s")
-    result["number_of_samples"] = (len(err_trans),"samples")
+    result["evaluation.number_of_samples"] = (len(err_trans),"samples")
+    result["evaluation.number_of_matches"] = (len(matches_difference)/2,"samples")
+    
+    result["evaluation.time_accuracy_of_matches.mean"] = (numpy.mean(matches_difference),"s")
+    result["evaluation.time_accuracy_of_matches.std"] = (numpy.std(matches_difference),"s")
+    result["evaluation.time_accuracy_of_matches.median"] = (numpy.median(matches_difference),"s")
+    result["evaluation.time_accuracy_of_matches.min"] = (numpy.min(matches_difference),"s")
+    result["evaluation.time_accuracy_of_matches.max"] = (numpy.max(matches_difference),"s")
     
     result["translational_error.mean"] = (numpy.mean(err_trans),"m")
     result["translational_error.std"] = (numpy.std(err_trans),"m")
