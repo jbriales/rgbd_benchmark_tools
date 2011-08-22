@@ -1,0 +1,438 @@
+It's 2011-07-14-04-12-58  starting to work on 
+kinect_dataset_360-2hz-points-gt.bag
+Finished after 31.74secs
+
+
+
+It's 2011-07-14-04-31-52  starting to work on 
+kinect_dataset_360-2hz-synced-gt-points.bag
+callbacks: 49 added: 8( 16 %)
+Finished after 31.95secs
+
+
+It's 2011-07-14-04-32-22  starting to work on 
+kinect_dataset_desk-2hz-points-gt.bag
+
+2011-07-14-04-33-09:  starting to work on 
+kinect_dataset_desk-2hz-synced-gt-points.bag
+callbacks: 38 added: 1 (2 %)
+Finished after 25.09secs
+
+
+2011-07-14-04-33-34:  starting to work on 
+kinect_dataset_desk2-2hz-points-gt.bag
+callbacks: 41 added: 1 (2 %)
+Finished after 26.74secs
+
+
+
+2011-07-14-04-35-31:  starting to work on 
+kinect_dataset_desk2-2hz-points-gt.orig.bag
+callbacks: 41 added: 1 (2 %)
+Finished after 26.41secs
+
+
+2011-07-14-04-35-57:  starting to work on 
+kinect_dataset_desk2-2hz-synced-gt-points.bag
+callbacks: 41 added: 1 (2 %)
+Finished after 25.83secs
+
+
+2011-07-14-04-36-25:  starting to work on 
+kinect_dataset_floor-2hz-points-gt.bag
+callbacks: 82 added: 58 (70 %)
+Finished after 72.86secs
+
+
+2011-07-14-04-37-27:  starting to work on 
+kinect_dataset_floor-2hz-synced-gt-points.bag
+callbacks: 82 added: 22 (26 %)
+Finished after 72.66secs
+
+
+2011-07-14-04-38-30:  starting to work on 
+kinect_dataset_plant-2hz-points-gt.bag
+callbacks: 75 added: 1 (1 %)
+Finished after 49.62secs
+
+
+2011-07-14-04-39-24:  starting to work on 
+kinect_dataset_plant-2hz-synced-gt-points.bag
+callbacks: 75 added: 1 (1 %)
+Finished after 50.01secs
+
+
+2011-07-14-04-40-17:  starting to work on 
+kinect_dataset_room-2hz-points-gt.bag
+callbacks: 90 added: 5 (5 %)
+Finished after 64.6secs
+
+
+2011-07-14-04-41-21:  starting to work on 
+kinect_dataset_room-2hz-synced-gt-points.bag
+callbacks: 90 added: 5 (5 %)
+Finished after 62.73secs
+
+
+2011-07-14-04-42-24:  starting to work on 
+kinect_dataset_rpy-2hz-points-gt.bag
+callbacks: 47 added: 26 (55 %)
+Finished after 41.57secs
+
+
+2011-07-14-04-42-59:  starting to work on 
+kinect_dataset_rpy-2hz-synced-gt-points.bag
+callbacks: 47 added: 1 (2 %)
+Finished after 30.27secs
+
+
+2011-07-14-04-43-31:  starting to work on 
+kinect_dataset_teddy-2hz-points-gt.bag
+
+2011-07-14-04-44-30:  starting to work on 
+kinect_dataset_teddy-2hz-synced-gt-points.bag
+callbacks: 93 added: 5 (5 %)
+Finished after 67.3secs
+
+
+2011-07-14-04-45-34:  starting to work on 
+kinect_dataset_xyz-2hz-points-gt.bag
+callbacks: 52 added: 52 (100 %)
+Finished after 49.96secs
+
+
+2011-07-14-04-46-13:  starting to work on 
+kinect_dataset_xyz-2hz-synced-gt-points.bag
+callbacks: 52 added: 51 (98 %)
+Finished after 50.66secs
+
+
+
+
+2011-07-14-05-03-50:  starting to work on 
+kinect_dataset_360-10hz-points-gt.bag
+callbacks: 252 added: 91 (36 %)
+Finished after 189.93secs
+
+
+2011-07-14-05-06-26:  starting to work on 
+kinect_dataset_360-10hz-synced-gt-points.bag
+callbacks: 252 added: 75 (29 %)
+Finished after 185.93secs
+
+
+2011-07-14-05-09-09:  starting to work on 
+kinect_dataset_360-30hz-points-gt.bag
+callbacks: 724 added: 236 (32 %)
+Finished after 580.42secs
+
+
+2011-07-14-05-17-42:  starting to work on 
+kinect_dataset_360-30hz-synced-gt-points.bag
+callbacks: 714 added: 1 (0 %)
+Finished after 451.43secs
+
+
+2011-07-14-05-25-48:  starting to work on 
+kinect_dataset_360-5hz-points-gt.bag
+callbacks: 125 added: 17 (13 %)
+Finished after 81.09secs
+
+
+2011-07-14-05-27-10:  starting to work on 
+kinect_dataset_360-5hz-synced-gt-points.bag
+callbacks: 125 added: 17 (13 %)
+Finished after 82.29secs
+
+
+2011-07-14-05-28-33:  starting to work on 
+kinect_dataset_desk-10hz-points-gt.bag
+callbacks: 198 added: 148 (74 %)
+Finished after 178.03secs
+
+
+2011-07-14-05-30-58:  starting to work on 
+kinect_dataset_desk-10hz-synced-gt-points.bag
+callbacks: 198 added: 149 (75 %)
+Finished after 177.11secs
+
+
+2011-07-14-05-33-22:  starting to work on 
+kinect_dataset_desk-30hz-points-gt.bag
+callbacks: 580 added: 442 (76 %)
+Finished after 584.05secs
+
+
+2011-07-14-05-40-54:  starting to work on 
+kinect_dataset_desk-30hz-synced-gt-points.bag
+callbacks: 580 added: 442 (76 %)
+Finished after 581.79secs
+
+
+2011-07-14-05-48-23:  starting to work on 
+kinect_dataset_desk-5hz-points-gt.bag
+callbacks: 98 added: 4 (4 %)
+Finished after 66.63secs
+
+
+2011-07-14-05-49-29:  starting to work on 
+kinect_dataset_desk-5hz-synced-gt-points.bag
+callbacks: 98 added: 4 (4 %)
+Finished after 66.72secs
+
+
+2011-07-14-05-50-35:  starting to work on 
+kinect_dataset_desk-synced-gt-points.bag
+
+2011-07-14-05-52-10:  starting to work on 
+kinect_dataset_desk2-10hz-points-gt.bag
+callbacks: 213 added: 14 (6 %)
+Finished after 168.42secs
+
+
+2011-07-14-05-54-35:  starting to work on 
+kinect_dataset_desk2-10hz-synced-gt-points.bag
+
+2011-07-14-05-54-45:  starting to work on 
+kinect_dataset_desk2-30hz-points-gt.bag
+callbacks: 626 added: 2 (0 %)
+Finished after 408.81secs
+
+
+2011-07-14-06-01-55:  starting to work on 
+kinect_dataset_desk2-30hz-synced-gt-points.bag
+callbacks: 604 added: 2 (0 %)
+Finished after 410.97secs
+
+
+2011-07-14-06-09-08:  starting to work on 
+kinect_dataset_desk2-5hz-points-gt.bag
+callbacks: 106 added: 2 (1 %)
+Finished after 68.27secs
+
+
+2011-07-14-06-10-19:  starting to work on 
+kinect_dataset_desk2-5hz-synced-gt-points.bag
+callbacks: 106 added: 2 (1 %)
+Finished after 67.96secs
+
+
+2011-07-14-06-11-31:  starting to work on 
+kinect_dataset_floor-10hz-points-gt.bag
+callbacks: 412 added: 317 (76 %)
+Finished after 413.14secs
+
+
+2011-07-14-06-16-54:  starting to work on 
+kinect_dataset_floor-10hz-synced-gt-points.bag
+callbacks: 412 added: 322 (78 %)
+Finished after 413.85secs
+
+
+2011-07-14-06-22-18:  starting to work on 
+kinect_dataset_floor-30hz-points-gt.bag
+callbacks: 1194 added: 1036 (86 %)
+Finished after 1313.77secs
+
+
+2011-07-14-06-39-01:  starting to work on 
+kinect_dataset_floor-30hz-synced-gt-points.bag
+callbacks: 1169 added: 1022 (87 %)
+Finished after 1293.15secs
+
+
+2011-07-14-06-55-37:  starting to work on 
+kinect_dataset_floor-5hz-points-gt.bag
+callbacks: 205 added: 152 (74 %)
+Finished after 193.34secs
+
+
+2011-07-14-06-58-13:  starting to work on 
+kinect_dataset_floor-5hz-synced-gt-points.bag
+callbacks: 206 added: 152 (73 %)
+Finished after 193.77secs
+
+
+2011-07-14-07-00-50:  starting to work on 
+kinect_dataset_plant-10hz-points-gt.bag
+callbacks: 380 added: 275 (72 %)
+Finished after 372.22secs
+
+
+2011-07-14-07-05-36:  starting to work on 
+kinect_dataset_plant-10hz-synced-gt-points.bag
+callbacks: 380 added: 277 (72 %)
+Finished after 370.92secs
+
+
+2011-07-14-07-10-23:  starting to work on 
+kinect_dataset_plant-30hz-points-gt.bag
+Failed to open
+
+2011-07-14-07-10-31:  starting to work on 
+kinect_dataset_plant-30hz-synced-gt-points.bag
+callbacks: 1095 added: 2 (0 %)
+Finished after 734.56secs
+
+
+2011-07-14-07-23-21:  starting to work on 
+kinect_dataset_plant-5hz-points-gt.bag
+callbacks: 189 added: 6 (3 %)
+Finished after 139.24secs
+
+
+2011-07-14-07-25-30:  starting to work on 
+kinect_dataset_plant-5hz-synced-gt-points.bag
+callbacks: 189 added: 2 (1 %)
+Finished after 121.95secs
+
+
+2011-07-14-07-27-37:  starting to work on 
+kinect_dataset_rgb_calibration-points-gt.bag
+callbacks: 88 added: 1 (1 %)
+Finished after 40.97secs
+
+
+2011-07-14-07-28-21:  starting to work on 
+kinect_dataset_room-10hz-points-gt.bag
+callbacks: 454 added: 70 (15 %)
+Finished after 363.05secs
+
+
+2011-07-14-07-33-39:  starting to work on 
+kinect_dataset_room-10hz-synced-gt-points.bag
+callbacks: 454 added: 111 (24 %)
+Finished after 368.02secs
+
+
+2011-07-14-07-39-00:  starting to work on 
+kinect_dataset_room-30hz-points-gt.bag
+callbacks: 1335 added: 2 (0 %)
+Finished after 884.48secs
+
+
+2011-07-14-07-54-31:  starting to work on 
+kinect_dataset_room-30hz-synced-gt-points.bag
+
+2011-07-14-08-09-10:  starting to work on 
+kinect_dataset_room-5hz-points-gt.bag
+callbacks: 226 added: 47 (20 %)
+Finished after 178.67secs
+
+
+2011-07-14-08-11-45:  starting to work on 
+kinect_dataset_room-5hz-synced-gt-points.bag
+callbacks: 226 added: 48 (21 %)
+Finished after 179.16secs
+
+
+2011-07-14-08-14-21:  starting to work on 
+kinect_dataset_rpy-10hz-points-gt.bag
+callbacks: 241 added: 236 (97 %)
+Finished after 270.98secs
+
+
+2011-07-14-08-17-31:  starting to work on 
+kinect_dataset_rpy-10hz-synced-gt-points.bag
+callbacks: 241 added: 5 (2 %)
+Finished after 168.2secs
+
+
+2011-07-14-08-20-14:  starting to work on 
+kinect_dataset_rpy-30hz-points-gt.bag
+callbacks: 681 added: 673 (98 %)
+Finished after 800.5secs
+
+
+2011-07-14-08-29-49:  starting to work on 
+kinect_dataset_rpy-30hz-synced-gt-points.bag
+callbacks: 701 added: 608 (86 %)
+Finished after 766.3secs
+
+
+2011-07-14-08-39-13:  starting to work on 
+kinect_dataset_rpy-5hz-points-gt.bag
+callbacks: 120 added: 114 (95 %)
+Finished after 133.08secs
+
+
+2011-07-14-08-40-49:  starting to work on 
+kinect_dataset_rpy-5hz-synced-gt-points.bag
+callbacks: 120 added: 1 (0 %)
+Finished after 75.48secs
+
+
+2011-07-14-08-42-10:  starting to work on 
+kinect_dataset_teddy-10hz-points-gt.bag
+callbacks: 473 added: 193 (40 %)
+Finished after 465.01secs
+
+
+2011-07-14-08-48-01:  starting to work on 
+kinect_dataset_teddy-10hz-synced-gt-points.bag
+callbacks: 473 added: 205 (43 %)
+Finished after 506.13secs
+
+
+2011-07-14-08-54-02:  starting to work on 
+kinect_dataset_teddy-30hz-points-gt.bag
+
+2011-07-14-09-08-49:  starting to work on 
+kinect_dataset_teddy-30hz-synced-gt-points.bag
+callbacks: 1347 added: 1 (0 %)
+Finished after 885.88secs
+
+
+2011-07-14-09-24-44:  starting to work on 
+kinect_dataset_teddy-5hz-points-gt.bag
+callbacks: 236 added: 24 (10 %)
+Finished after 203.57secs
+
+
+2011-07-14-09-27-30:  starting to work on 
+kinect_dataset_teddy-5hz-synced-gt-points.bag
+callbacks: 236 added: 28 (11 %)
+Finished after 206.2secs
+
+
+2011-07-14-09-30-16:  starting to work on 
+kinect_dataset_xyz-10hz-points-gt.bag
+callbacks: 266 added: 266 (100 %)
+Finished after 409secs
+
+
+2011-07-14-09-35-55:  starting to work on 
+kinect_dataset_xyz-10hz-synced-gt-points.bag
+callbacks: 266 added: 266 (100 %)
+Finished after 413.07secs
+
+
+2011-07-14-09-41-36:  starting to work on 
+kinect_dataset_xyz-30hz-points-gt.bag
+callbacks: 781 added: 781 (100 %)
+Finished after 3328.22secs
+
+
+2011-07-14-10-33-11:  starting to work on 
+kinect_dataset_xyz-30hz-synced-gt-points.bag
+callbacks: 763 added: 763 (100 %)
+Finished after 3575.84secs
+
+
+2011-07-14-11-28-36:  starting to work on 
+kinect_dataset_xyz-5hz-points-gt.bag
+callbacks: 132 added: 127 (96 %)
+Finished after 143.87secs
+
+
+2011-07-14-11-30-29:  starting to work on 
+kinect_dataset_xyz-5hz-synced-gt-points.bag
+callbacks: 132 added: 126 (95 %)
+Finished after 149.77secs
+
+
+2011-07-14-11-32-26:  starting to work on 
+kinect_dataset_xyz-synced-gt-points.bag
+callbacks: 763 added: 763 (100 %)
+Finished after 3568.09secs
+
