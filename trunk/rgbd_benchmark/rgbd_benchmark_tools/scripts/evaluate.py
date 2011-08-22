@@ -106,9 +106,8 @@ def evaluate_trajectory(traj_gt,traj_est,param_delta=1.00,param_offset=0.01,stor
         err_rot.append( rot )
         
         if store_individual_errors:
-            result["translational_error.list[%f]"%stamp_est_0] = (trans,"m") 
-            result["rotational_error.list[%f]"%stamp_est_0] = (trans,"m") 
-
+            result["translational_error.list.%f"%stamp_est_0] = (trans,"m") 
+            result["rotational_error.list.%f"%stamp_est_0] = (trans,"rad") 
         
     if(len(matches_difference)/2<2):
         raise Exception("Couldn't find matching timestamp pairs between groundtruth and estimated trajectory!")
@@ -145,13 +144,13 @@ if __name__ == '__main__':
     ''')
     parser.add_argument('groundtruth_file', help='ground-truth trajectory file (format: "timestamp tx ty tz qx qy qz qw")')
     parser.add_argument('estimated_file', help='estimated trajectory file (format: "timestamp tx ty tz qx qy qz qw")')
-    parser.add_argument('--time_delta', help='time delta for evaluation (default: 1.0)',default=1.0)
+    parser.add_argument('--delta', help='time delta for evaluation (default: 1.0)',default=1.0)
     parser.add_argument('--offset', help='time offset between ground-truth and estimated trajectory (default: 0.0)',default=0.0)
     parser.add_argument('--verbose', help='print all evaluation data (otherwise, only the mean translational error measured in meters will be printed)', action='store_true')
     parser.add_argument('--store_individual_errors', help='additional store the individual errors (use with --verbose)', action='store_true')
     args = parser.parse_args()
     
-    param_delta = float(args.time_delta)
+    param_delta = float(args.delta)
     param_offset = float(args.offset)
     
     traj_gt = read_trajectory(args.groundtruth_file)
