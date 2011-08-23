@@ -7,6 +7,7 @@ import argparse
 import sys
 import os
 import numpy
+import random
 
 _EPS = numpy.finfo(float).eps * 4.0
 
@@ -89,11 +90,25 @@ def rotations_along_trajectory(traj):
     return distances
     
 
-def evaluate_trajectory(traj_gt,traj_est,param_delta=1.00,param_delta_unit="s",param_offset=0.01,store_individual_errors=False):
+def evaluate_trajectory(traj_gt,traj_est,param_max_pairs=10000,param_fixed_delta=False,param_delta=1.00,param_delta_unit="s",param_offset=0.01,store_individual_errors=False):
     stamps_gt = list(traj_gt.keys())
     stamps_est = list(traj_est.keys())
     stamps_gt.sort()
     stamps_est.sort()
+    interval_gt = [abs(a-b) for a,b in zip(stamps_gt[:-1],stamps_gt[1:])]
+    interval_est = [abs(a-b) for a,b in zip(stamps_est[:-1],stamps_est[1:])]
+    
+    result ={}
+    if param_fixed_delta:
+        result["parameter.delta"] = ((param_delta),param_delta_unit)
+        result["parameter.offset"] = ((param_offset),"s")
+    result["input.groundtruth.samples"] = ((len(stamps_gt)),"samples")
+    result["input.estimated.samples"] = ((len(stamps_est)),"samples")
+    result["input.groundtruth.frequency"] = (1/numpy.median(interval_gt),"Hz")
+    result["input.groundtruth.duration"] = (len(stamps_gt) * numpy.median(interval_gt),"s")
+    result["input.estimated.frequency"] = (1/numpy.median(interval_est),"Hz")
+    result["input.estimated.duration"] = (len(stamps_est) * numpy.median(interval_est),"s")
+    result["input.coverage"] = (result["input.estimated.duration"][0] / result["input.groundtruth.duration"][0],"")
 
     if param_delta_unit=="s":
         index_gt = list(traj_gt.keys())
@@ -108,31 +123,26 @@ def evaluate_trajectory(traj_gt,traj_est,param_delta=1.00,param_delta_unit="s",p
         index_est = rotations_along_trajectory(traj_est)
     else:
         raise Exception("Unknown unit for delta: '%s'"%param_delta_unit)
-    
-    result ={}
-    result["parameter.delta"] = (float(param_delta),param_delta_unit)
-    result["parameter.offset"] = (float(param_offset),"s")
 
-    interval_gt = [abs(a-b) for a,b in zip(stamps_gt[:-1],stamps_gt[1:])]
-    interval_est = [abs(a-b) for a,b in zip(stamps_est[:-1],stamps_est[1:])]
-    
-    result["input.groundtruth.samples"] = (float(len(stamps_gt)),"samples")
-    result["input.estimated.samples"] = (float(len(stamps_est)),"samples")
-    result["input.groundtruth.frequency"] = (1/numpy.median(interval_gt),"Hz")
-    result["input.groundtruth.duration"] = (len(stamps_gt) * numpy.median(interval_gt),"s")
-    result["input.estimated.frequency"] = (1/numpy.median(interval_est),"Hz")
-    result["input.estimated.duration"] = (len(stamps_est) * numpy.median(interval_est),"s")
-    result["input.coverage"] = (result["input.estimated.duration"][0] / result["input.groundtruth.duration"][0],"")
+    if not param_fixed_delta:
+        if(param_max_pairs==0 or len(traj_est)<numpy.sqrt(param_max_pairs)):
+            pairs = [(i,j) for i in range(len(traj_est)) for j in range(len(traj_est))]
+        else:
+            pairs = [(random.randint(0,len(traj_est)-1),random.randint(0,len(traj_est)-1)) for i in range(param_max_pairs)]
+    else:
+        pairs = []
+        for i in range(len(traj_est)):
+            j = find_closest_index(index_est,index_est[i] + param_delta)
+            if j!=len(traj_est)-1: 
+                pairs.append((i,j))
+        if(param_max_pairs!=0 and len(pairs)>param_max_pairs):
+            pairs = random.sample(pairs,param_max_pairs)
     
     err_trans = []
     err_rot = []
     
     matches_difference = []
-    for i in range(len(traj_est)):
-        j = find_closest_index(index_est,index_est[i] + param_delta)
-        if j==len(traj_est)-1: 
-            continue
-        
+    for i,j in pairs:
         stamp_est_0 = stamps_est[i]
         stamp_est_1 = stamps_est[j]
 
@@ -158,8 +168,7 @@ def evaluate_trajectory(traj_gt,traj_est,param_delta=1.00,param_delta_unit="s",p
     if(len(matches_difference)/2<2):
         raise Exception("Couldn't find matching timestamp pairs between groundtruth and estimated trajectory!")
         
-    result["evaluation.number_of_samples"] = (len(err_trans),"samples")
-    result["evaluation.number_of_matches"] = (len(matches_difference)/2,"samples")
+    result["evaluation.pose_pairs"] = (len(err_trans),"samples")
     
     result["evaluation.time_accuracy_of_matches.mean"] = (numpy.mean(matches_difference),"s")
     result["evaluation.time_accuracy_of_matches.std"] = (numpy.std(matches_difference),"s")
@@ -190,13 +199,17 @@ if __name__ == '__main__':
     ''')
     parser.add_argument('groundtruth_file', help='ground-truth trajectory file (format: "timestamp tx ty tz qx qy qz qw")')
     parser.add_argument('estimated_file', help='estimated trajectory file (format: "timestamp tx ty tz qx qy qz qw")')
+    parser.add_argument('--max_pairs', help='maximum number of pose comparisons (default: 10000, set to zero to disable downsampling)', default=10000)
+    parser.add_argument('--fixed_delta', help='only consider pose pairs that have a distance of delta delta_unit (e.g., for evaluating the drift per second/meter/radian)', action='store_true')
     parser.add_argument('--delta', help='delta for evaluation (default: 1.0)',default=1.0)
     parser.add_argument('--delta_unit', help='unit of delta (options: \'s\' for seconds, \'m\' for meters, \'rad\' for radians; default: \'s\')',default='s')
     parser.add_argument('--offset', help='time offset between ground-truth and estimated trajectory (default: 0.0)',default=0.0)
     parser.add_argument('--verbose', help='print all evaluation data (otherwise, only the mean translational error measured in meters will be printed)', action='store_true')
     parser.add_argument('--store_individual_errors', help='additional store the individual errors (use with --verbose)', action='store_true')
     args = parser.parse_args()
-    
+
+    param_max_pairs = args.max_pairs
+    param_fixed_delta = args.fixed_delta
     param_delta = float(args.delta)
     param_delta_unit = args.delta_unit
     param_offset = float(args.offset)
@@ -204,11 +217,11 @@ if __name__ == '__main__':
     traj_gt = read_trajectory(args.groundtruth_file)
     traj_est = read_trajectory(args.estimated_file)
     
-    result = evaluate_trajectory(traj_gt,traj_est,param_delta,param_delta_unit,param_offset,args.store_individual_errors)
+    result = evaluate_trajectory(traj_gt,traj_est,param_max_pairs,param_fixed_delta,param_delta,param_delta_unit,param_offset,args.store_individual_errors)
     if args.verbose:
         keys = list(result.keys())
         keys.sort()
-        print("".join("%s = %0.5f %s\n"%(key,result[key][0],result[key][1]) for key in keys))
+        print("".join("%s = %f %s\n"%(key,result[key][0],result[key][1]) for key in keys))
     else:
         print result["translational_error.mean"][0]
 
