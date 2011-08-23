@@ -31,7 +31,6 @@ if __name__ == '__main__':
     result = evaluate.evaluate_trajectory(traj_gt,traj_est,param_delta,param_offset,True)
     err_trans  = [(float(key[26:]),value) for key,(value,unit) in result.iteritems() if key.startswith("translational_error.list.")]
     err_trans.sort()
-    #err_rot = [(float(key[23:]),value) for (key,value,unit) in result if key.startsWith("rotational_error.list.")]
     
     fig = plt.figure()
     ax = fig.add_subplot(111)        
