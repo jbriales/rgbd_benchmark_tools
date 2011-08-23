@@ -1,4 +1,7 @@
 #!/usr/bin/python
+#
+# this script requires ROS diamondback
+# for installation instructions, see http://www.ros.org 
 
 import roslib; roslib.load_manifest('rgbd_benchmark_tools')
 import rospy
