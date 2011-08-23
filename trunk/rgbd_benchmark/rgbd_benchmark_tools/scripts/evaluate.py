@@ -141,16 +141,12 @@ def evaluate_trajectory(traj_gt,traj_est,param_max_pairs=10000,param_fixed_delta
     err_trans = []
     err_rot = []
     
-    matches_difference = []
     for i,j in pairs:
         stamp_est_0 = stamps_est[i]
         stamp_est_1 = stamps_est[j]
 
         stamp_gt_0 = stamps_gt[ find_closest_index(stamps_gt,stamp_est_0 - param_offset) ]
         stamp_gt_1 = stamps_gt[ find_closest_index(stamps_gt,stamp_est_1 - param_offset) ]
-        
-        matches_difference.append( abs(stamp_est_0 - stamp_gt_0) )
-        matches_difference.append( abs(stamp_est_1 - stamp_gt_1) )
         
         error44 = ominus(  ominus( traj_est[stamp_est_1], traj_est[stamp_est_0] ),
                            ominus( traj_gt[stamp_gt_1], traj_gt[stamp_gt_0] ) )
@@ -165,16 +161,10 @@ def evaluate_trajectory(traj_gt,traj_est,param_max_pairs=10000,param_fixed_delta
             result["translational_error.list.%f"%stamp_est_0] = (trans,"m") 
             result["rotational_error.list.%f"%stamp_est_0] = (trans,"rad") 
         
-    if(len(matches_difference)/2<2):
+    if(len(trans)<2):
         raise Exception("Couldn't find matching timestamp pairs between groundtruth and estimated trajectory!")
         
-    result["evaluation.pose_pairs"] = (len(err_trans),"samples")
-    
-    result["evaluation.time_accuracy_of_matches.mean"] = (numpy.mean(matches_difference),"s")
-    result["evaluation.time_accuracy_of_matches.std"] = (numpy.std(matches_difference),"s")
-    result["evaluation.time_accuracy_of_matches.median"] = (numpy.median(matches_difference),"s")
-    result["evaluation.time_accuracy_of_matches.min"] = (numpy.min(matches_difference),"s")
-    result["evaluation.time_accuracy_of_matches.max"] = (numpy.max(matches_difference),"s")
+    result["input.pose_pairs"] = (len(err_trans),"samples")
     
     result["translational_error.mean"] = (numpy.mean(err_trans),"m")
     result["translational_error.std"] = (numpy.std(err_trans),"m")
