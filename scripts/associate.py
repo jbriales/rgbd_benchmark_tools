@@ -37,8 +37,8 @@ if __name__ == '__main__':
     
     first_keys = first_list.keys()
     second_keys = second_list.keys()
-    
-    potential_matches = [(abs(a-(b+args.offset)),a,(b+args.offset)) for a in first_keys for b in second_keys if abs(a-(b+args.offset)) < args.max_difference]
+
+    potential_matches = [(abs(a-(b+args.offset)),a,b) for a in first_keys for b in second_keys if abs(a-(b+args.offset)) < args.max_difference]
     potential_matches.sort()
 
     matches = []
