@@ -161,7 +161,7 @@ def evaluate_trajectory(traj_gt,traj_est,param_max_pairs=10000,param_fixed_delta
             result["translational_error.list.%f"%stamp_est_0] = (trans,"m") 
             result["rotational_error.list.%f"%stamp_est_0] = (trans,"rad") 
         
-    if len(trans)<2:
+    if len(err_trans)<2:
         raise Exception("Couldn't find matching timestamp pairs between groundtruth and estimated trajectory!")
         
     result["input.pose_pairs"] = (len(err_trans),"samples")
