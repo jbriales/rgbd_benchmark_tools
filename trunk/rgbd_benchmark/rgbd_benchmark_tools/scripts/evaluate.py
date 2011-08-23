@@ -181,7 +181,7 @@ def evaluate_trajectory(traj_gt,traj_est,param_max_pairs=10000,param_fixed_delta
     return result
 
 if __name__ == '__main__':
-    
+    random.seed(0)
     # parse command line
     parser = argparse.ArgumentParser(description='''
     This script reads a ground-truth trajectory and an estimated trajectory, and computes the translational error.
