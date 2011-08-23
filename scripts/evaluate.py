@@ -105,9 +105,9 @@ def evaluate_trajectory(traj_gt,traj_est,param_max_pairs=10000,param_fixed_delta
     for t_est in stamps_est:
         t_gt = stamps_gt[find_closest_index(stamps_gt,t_est)]
         t_est_return = stamps_est[find_closest_index(stamps_est,t_gt)]
+        t_gt_return = stamps_gt[find_closest_index(stamps_gt,t_est_return)]
         if not t_est_return in stamps_est_return:
             stamps_est_return.append(t_est_return)
-    result["input.coverage"] = (len(stamps_est_return) / float(len(stamps_est)),"(ratio)")
     if(len(stamps_est_return)<2):
         raise Exception("Number of overlap in the timestamps is too small. Did you run the evaluation on the right files?")
 
@@ -165,8 +165,6 @@ def evaluate_trajectory(traj_gt,traj_est,param_max_pairs=10000,param_fixed_delta
     if len(err_trans)<2:
         raise Exception("Couldn't find matching timestamp pairs between groundtruth and estimated trajectory!")
         
-    result["input.pose_pairs"] = (len(err_trans),"samples")
-    
     result["translational_error.mean"] = (numpy.mean(err_trans),"m")
     result["translational_error.std"] = (numpy.std(err_trans),"m")
     result["translational_error.median"] = (numpy.median(err_trans),"m")
