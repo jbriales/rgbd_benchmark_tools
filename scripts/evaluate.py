@@ -95,20 +95,21 @@ def evaluate_trajectory(traj_gt,traj_est,param_max_pairs=10000,param_fixed_delta
     stamps_est = list(traj_est.keys())
     stamps_gt.sort()
     stamps_est.sort()
-    interval_gt = [abs(a-b) for a,b in zip(stamps_gt[:-1],stamps_gt[1:])]
-    interval_est = [abs(a-b) for a,b in zip(stamps_est[:-1],stamps_est[1:])]
     
     result ={}
     if param_fixed_delta:
         result["parameter.delta"] = ((param_delta),param_delta_unit)
         result["parameter.offset"] = ((param_offset),"s")
-    result["input.groundtruth.samples"] = ((len(stamps_gt)),"samples")
-    result["input.estimated.samples"] = ((len(stamps_est)),"samples")
-    result["input.groundtruth.frequency"] = (1/numpy.median(interval_gt),"Hz")
-    result["input.groundtruth.duration"] = (len(stamps_gt) * numpy.median(interval_gt),"s")
-    result["input.estimated.frequency"] = (1/numpy.median(interval_est),"Hz")
-    result["input.estimated.duration"] = (len(stamps_est) * numpy.median(interval_est),"s")
-    result["input.coverage"] = (result["input.estimated.duration"][0] / result["input.groundtruth.duration"][0],"")
+        
+    stamps_est_return = []
+    for t_est in stamps_est:
+        t_gt = stamps_gt[find_closest_index(stamps_gt,t_est)]
+        t_est_return = stamps_est[find_closest_index(stamps_est,t_gt)]
+        if not t_est_return in stamps_est_return:
+            stamps_est_return.append(t_est_return)
+    result["input.coverage"] = (len(stamps_est_return) / float(len(stamps_est)),"(ratio)")
+    if(len(stamps_est_return)<2):
+        raise Exception("Number of overlap in the timestamps is too small. Did you run the evaluation on the right files?")
 
     if param_delta_unit=="s":
         index_gt = list(traj_gt.keys())
