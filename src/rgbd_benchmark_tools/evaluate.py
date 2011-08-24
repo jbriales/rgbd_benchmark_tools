@@ -159,7 +159,7 @@ if __name__ == '__main__':
     random.seed(0)
 
     parser = argparse.ArgumentParser(description='''
-    This script reads a ground-truth trajectory and an estimated trajectory, and computes the (translational) error.
+    This script reads a ground-truth trajectory and an estimated trajectory, and computes -- by default -- the root mean squared translational error.
     ''')
     parser.add_argument('groundtruth_file', help='ground-truth trajectory file (format: "timestamp tx ty tz qx qy qz qw")')
     parser.add_argument('estimated_file', help='estimated trajectory file (format: "timestamp tx ty tz qx qy qz qw")')
@@ -206,4 +206,4 @@ if __name__ == '__main__':
         print "rotational_error.min %f"%numpy.min(rot_error)
         print "rotational_error.max %f"%numpy.max(rot_error)
     else:
-        print numpy.mean(trans_error)
+        print numpy.sqrt(numpy.dot(trans_error,trans_error) / len(trans_error))
