@@ -3,18 +3,9 @@
 # this script requires ROS diamondback
 # for installation instructions, see http://www.ros.org 
 
-import roslib; roslib.load_manifest('rgbd_benchmark_tools')
-import rospy
-import rosbag
-import sensor_msgs.msg
 import argparse
 import sys
 import os
-import cv
-import struct
-import tf
-
-from cv_bridge import CvBridge, CvBridgeError
 
 if __name__ == '__main__':
     
@@ -32,6 +23,15 @@ if __name__ == '__main__':
     parser.add_argument('inputbag', help='input bag file')
     parser.add_argument('outputbag', nargs='?',help='output bag file')
     args = parser.parse_args()
+
+    import roslib; roslib.load_manifest('rgbd_benchmark_tools')
+    import rospy
+    import rosbag
+    import sensor_msgs.msg
+    import cv
+    from cv_bridge import CvBridge, CvBridgeError
+    import struct
+    import tf
     
     if not args.outputbag:
         args.outputbag = os.path.splitext(args.inputbag)[0] + "-points.bag"
