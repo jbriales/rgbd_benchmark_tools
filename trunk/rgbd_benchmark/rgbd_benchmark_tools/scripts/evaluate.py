@@ -90,22 +90,17 @@ def rotations_along_trajectory(traj):
     return distances
     
 
-def evaluate_trajectory(traj_gt,traj_est,param_max_pairs=10000,param_fixed_delta=False,param_delta=1.00,param_delta_unit="s",param_offset=0.01,store_individual_errors=False):
+def evaluate_trajectory(traj_gt,traj_est,param_max_pairs=10000,param_fixed_delta=False,param_delta=1.00,param_delta_unit="s",param_offset=0.01):
     stamps_gt = list(traj_gt.keys())
     stamps_est = list(traj_est.keys())
     stamps_gt.sort()
     stamps_est.sort()
     
-    result ={}
-    if param_fixed_delta:
-        result["parameter.delta"] = ((param_delta),param_delta_unit)
-        result["parameter.offset"] = ((param_offset),"s")
-        
     stamps_est_return = []
     for t_est in stamps_est:
-        t_gt = stamps_gt[find_closest_index(stamps_gt,t_est)]
-        t_est_return = stamps_est[find_closest_index(stamps_est,t_gt)]
-        t_gt_return = stamps_gt[find_closest_index(stamps_gt,t_est_return)]
+        t_gt = stamps_gt[find_closest_index(stamps_gt,t_est - param_offset)]
+        t_est_return = stamps_est[find_closest_index(stamps_est,t_gt + param_offset)]
+        t_gt_return = stamps_gt[find_closest_index(stamps_gt,t_est_return - param_offset)]
         if not t_est_return in stamps_est_return:
             stamps_est_return.append(t_est_return)
     if(len(stamps_est_return)<2):
@@ -139,9 +134,7 @@ def evaluate_trajectory(traj_gt,traj_est,param_max_pairs=10000,param_fixed_delta
         if(param_max_pairs!=0 and len(pairs)>param_max_pairs):
             pairs = random.sample(pairs,param_max_pairs)
     
-    err_trans = []
-    err_rot = []
-    
+    result = []
     for i,j in pairs:
         stamp_est_0 = stamps_est[i]
         stamp_est_1 = stamps_est[j]
@@ -153,36 +146,18 @@ def evaluate_trajectory(traj_gt,traj_est,param_max_pairs=10000,param_fixed_delta
                            ominus( traj_gt[stamp_gt_1], traj_gt[stamp_gt_0] ) )
         
         trans = compute_distance(error44)
-        err_trans.append( trans )
-
         rot = compute_angle(error44)
-        err_rot.append( rot )
         
-        if store_individual_errors:
-            result["translational_error.list.%f"%stamp_est_0] = (trans,"m") 
-            result["rotational_error.list.%f"%stamp_est_0] = (rot,"rad") 
+        result.append([stamp_est_0,stamp_est_1,stamp_gt_0,stamp_gt_1,trans,rot])
         
-    if len(err_trans)<2:
+    if len(result)<2:
         raise Exception("Couldn't find matching timestamp pairs between groundtruth and estimated trajectory!")
         
-    result["translational_error.mean"] = (numpy.mean(err_trans),"m")
-    result["translational_error.std"] = (numpy.std(err_trans),"m")
-    result["translational_error.median"] = (numpy.median(err_trans),"m")
-    result["translational_error.min"] = (numpy.min(err_trans),"m")
-    result["translational_error.max"] = (numpy.max(err_trans),"m")
-    
-    result["rotational_error.mean"] = (numpy.mean(err_rot),"rad")
-    result["rotational_error.std"] = (numpy.std(err_rot),"rad")
-    result["rotational_error.median"] = (numpy.median(err_rot),"rad")
-    result["rotational_error.min"] = (numpy.min(err_rot),"rad")
-    result["rotational_error.max"] = (numpy.max(err_rot),"rad")
-    
-    
     return result
 
 if __name__ == '__main__':
     random.seed(0)
-    # parse command line
+
     parser = argparse.ArgumentParser(description='''
     This script reads a ground-truth trajectory and an estimated trajectory, and computes the (translational) error.
     ''')
@@ -193,24 +168,42 @@ if __name__ == '__main__':
     parser.add_argument('--delta', help='delta for evaluation (default: 1.0)',default=1.0)
     parser.add_argument('--delta_unit', help='unit of delta (options: \'s\' for seconds, \'m\' for meters, \'rad\' for radians; default: \'s\')',default='s')
     parser.add_argument('--offset', help='time offset between ground-truth and estimated trajectory (default: 0.0)',default=0.0)
+    parser.add_argument('--save', help='text file to which the evaluation will be saved (format: stamp_est0 stamp_est1 stamp_gt0 stamp_gt1 trans_error rot_error)')
     parser.add_argument('--verbose', help='print all evaluation data (otherwise, only the mean translational error measured in meters will be printed)', action='store_true')
-    parser.add_argument('--store_individual_errors', help='additional store the individual errors (use with --verbose)', action='store_true')
     args = parser.parse_args()
-
-    param_max_pairs = args.max_pairs
-    param_fixed_delta = args.fixed_delta
-    param_delta = float(args.delta)
-    param_delta_unit = args.delta_unit
-    param_offset = float(args.offset)
     
     traj_gt = read_trajectory(args.groundtruth_file)
     traj_est = read_trajectory(args.estimated_file)
     
-    result = evaluate_trajectory(traj_gt,traj_est,param_max_pairs,param_fixed_delta,param_delta,param_delta_unit,param_offset,args.store_individual_errors)
+    result = evaluate_trajectory(traj_gt,
+                                 traj_est,
+                                 args.max_pairs,
+                                 args.fixed_delta,
+                                 float(args.delta),
+                                 args.delta_unit,
+                                 float(args.offset))
+    
+    trans_error = numpy.array(result)[:,4]
+    rot_error = numpy.array(result)[:,5]
+    
+    if args.save:
+        f = open(args.save,"w")
+        f.write("\n".join([" ".join(["%f"%v for v in line]) for line in result]))
+        f.close()
+    
     if args.verbose:
-        keys = list(result.keys())
-        keys.sort()
-        print("".join("%s = %f %s\n"%(key,result[key][0],result[key][1]) for key in keys))
-    else:
-        print result["translational_error.mean"][0]
+        print "compared_pose_pairs %d"%(len(trans_error))
 
+        print "translational_error.rmse %f"%numpy.sqrt(numpy.dot(trans_error,trans_error) / len(trans_error))
+        print "translational_error.mean %f"%numpy.mean(trans_error)
+        print "translational_error.std %f"%numpy.std(trans_error)
+        print "translational_error.min %f"%numpy.min(trans_error)
+        print "translational_error.max %f"%numpy.max(trans_error)
+
+        print "rotational_error.rmse %f"%numpy.sqrt(numpy.dot(rot_error,rot_error) / len(rot_error))
+        print "rotational_error.mean %f"%numpy.mean(rot_error)
+        print "rotational_error.std %f"%numpy.std(rot_error)
+        print "rotational_error.min %f"%numpy.min(rot_error)
+        print "rotational_error.max %f"%numpy.max(rot_error)
+    else:
+        print numpy.mean(trans_error)
