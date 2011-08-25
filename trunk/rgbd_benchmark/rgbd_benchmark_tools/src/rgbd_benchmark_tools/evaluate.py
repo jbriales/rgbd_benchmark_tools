@@ -177,7 +177,7 @@ if __name__ == '__main__':
     
     result = evaluate_trajectory(traj_gt,
                                  traj_est,
-                                 args.max_pairs,
+                                 int(args.max_pairs),
                                  args.fixed_delta,
                                  float(args.delta),
                                  args.delta_unit,
