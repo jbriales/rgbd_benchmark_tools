@@ -114,6 +114,12 @@ if __name__ == '__main__':
                     outbag.write("/camera/depth/image",depth_image,t)
                     outbag.write("/camera/rgb/camera_info",rgb_camera_info,t)
                     outbag.write("/camera/rgb/image_color",rgb_image_color,t)
+
+                    # generate monochrome image from color image
+                    cv_rgb_image_mono = bridge.imgmsg_to_cv(rgb_image_color, "mono8")
+                    rgb_image_mono = bridge.cv_to_imgmsg(cv_rgb_image_mono)
+                    rgb_image_mono.header = rgb_image_color.header
+                    outbag.write("/camera/rgb/image_mono",rgb_image_mono,t)
     
                     # generate depth and colored point cloud
                     cv_depth_image = bridge.imgmsg_to_cv(depth_image, "passthrough")
