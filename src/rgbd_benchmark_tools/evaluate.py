@@ -113,7 +113,7 @@ def evaluate_trajectory(traj_gt,traj_est,param_max_pairs=10000,param_fixed_delta
         index_est = distances_along_trajectory(traj_est)
     elif param_delta_unit=="rad":
         index_est = rotations_along_trajectory(traj_est)
-    elif param_delta_unit=="f" or param_delta_unit=="frame" or param_delta_unit=="frames":
+    elif param_delta_unit=="f":
         index_est = range(len(traj_est))
     else:
         raise Exception("Unknown unit for delta: '%s'"%param_delta_unit)
