@@ -107,16 +107,14 @@ def evaluate_trajectory(traj_gt,traj_est,param_max_pairs=10000,param_fixed_delta
         raise Exception("Number of overlap in the timestamps is too small. Did you run the evaluation on the right files?")
 
     if param_delta_unit=="s":
-        index_gt = list(traj_gt.keys())
         index_est = list(traj_est.keys())
-        index_gt.sort()
         index_est.sort()
     elif param_delta_unit=="m":
-        index_gt = distances_along_trajectory(traj_gt)
         index_est = distances_along_trajectory(traj_est)
     elif param_delta_unit=="rad":
-        index_gt = rotations_along_trajectory(traj_gt)
         index_est = rotations_along_trajectory(traj_est)
+    elif param_delta_unit=="f":
+        index_est = range(len(traj_est))
     else:
         raise Exception("Unknown unit for delta: '%s'"%param_delta_unit)
 
@@ -166,7 +164,7 @@ if __name__ == '__main__':
     parser.add_argument('--max_pairs', help='maximum number of pose comparisons (default: 10000, set to zero to disable downsampling)', default=10000)
     parser.add_argument('--fixed_delta', help='only consider pose pairs that have a distance of delta delta_unit (e.g., for evaluating the drift per second/meter/radian)', action='store_true')
     parser.add_argument('--delta', help='delta for evaluation (default: 1.0)',default=1.0)
-    parser.add_argument('--delta_unit', help='unit of delta (options: \'s\' for seconds, \'m\' for meters, \'rad\' for radians; default: \'s\')',default='s')
+    parser.add_argument('--delta_unit', help='unit of delta (options: \'s\' for seconds, \'m\' for meters, \'rad\' for radians, \'f\' for frames; default: \'s\')',default='s')
     parser.add_argument('--offset', help='time offset between ground-truth and estimated trajectory (default: 0.0)',default=0.0)
     parser.add_argument('--save', help='text file to which the evaluation will be saved (format: stamp_est0 stamp_est1 stamp_gt0 stamp_gt1 trans_error rot_error)')
     parser.add_argument('--verbose', help='print all evaluation data (otherwise, only the mean translational error measured in meters will be printed)', action='store_true')
