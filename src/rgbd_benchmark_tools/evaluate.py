@@ -46,7 +46,7 @@ def read_trajectory(filename):
                 isnan = True
                 break
         if isnan:
-            print "Warning: line %d of file '%s' has NaNs, skipping line"%(i,filename)
+            sys.stderr.write("Warning: line %d of file '%s' has NaNs, skipping line"%(i,filename))
             continue
         list_ok.append(l)
     traj = dict([(l[0],transform44(l[0:])) for l in list_ok])
