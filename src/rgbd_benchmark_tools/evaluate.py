@@ -36,7 +36,20 @@ def read_trajectory(filename):
     data = file.read()
     lines = data.replace(","," ").replace("\t"," ").split("\n") 
     list = [[float(v.strip()) for v in line.split(" ") if v.strip()!=""] for line in lines if len(line)>0 and line[0]!="#"]
-    traj = dict([(l[0],transform44(l[0:])) for l in list if l[4:8]!=[0,0,0,0]])
+    list_ok = []
+    for i,l in enumerate(list):
+        if l[4:8]==[0,0,0,0]:
+            continue
+        isnan = False
+        for v in l:
+            if numpy.isnan(v): 
+                isnan = True
+                break
+        if isnan:
+            print "Warning: line %d of file '%s' has NaNs, skipping line"%(i,filename)
+            continue
+        list_ok.append(l)
+    traj = dict([(l[0],transform44(l[0:])) for l in list_ok])
     return traj
 
 def find_closest_index(L,t):
