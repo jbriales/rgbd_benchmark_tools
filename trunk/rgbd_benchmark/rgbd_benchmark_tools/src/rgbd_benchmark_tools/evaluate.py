@@ -103,7 +103,7 @@ def rotations_along_trajectory(traj):
     return distances
     
 
-def evaluate_trajectory(traj_gt,traj_est,param_max_pairs=10000,param_fixed_delta=False,param_delta=1.00,param_delta_unit="s",param_offset=0.01):
+def evaluate_trajectory(traj_gt,traj_est,param_max_pairs=10000,param_fixed_delta=False,param_delta=1.00,param_delta_unit="s",param_offset=0.00):
     stamps_gt = list(traj_gt.keys())
     stamps_est = list(traj_est.keys())
     stamps_gt.sort()
@@ -145,6 +145,9 @@ def evaluate_trajectory(traj_gt,traj_est,param_max_pairs=10000,param_fixed_delta
         if(param_max_pairs!=0 and len(pairs)>param_max_pairs):
             pairs = random.sample(pairs,param_max_pairs)
     
+    gt_interval = numpy.median([s-t for s,t in zip(stamps_gt[1:],stamps_gt[:-1])])
+    gt_max_time_difference = 2*gt_interval
+    
     result = []
     for i,j in pairs:
         stamp_est_0 = stamps_est[i]
@@ -152,6 +155,10 @@ def evaluate_trajectory(traj_gt,traj_est,param_max_pairs=10000,param_fixed_delta
 
         stamp_gt_0 = stamps_gt[ find_closest_index(stamps_gt,stamp_est_0 - param_offset) ]
         stamp_gt_1 = stamps_gt[ find_closest_index(stamps_gt,stamp_est_1 - param_offset) ]
+        
+        if(abs(stamp_gt_0 - (stamp_est_0 - param_offset)) > gt_max_time_difference  or
+           abs(stamp_gt_1 - (stamp_est_1 - param_offset)) > gt_max_time_difference):
+            continue
         
         error44 = ominus(  ominus( traj_est[stamp_est_1], traj_est[stamp_est_0] ),
                            ominus( traj_gt[stamp_gt_1], traj_gt[stamp_gt_0] ) )
