@@ -46,7 +46,7 @@ def read_trajectory(filename):
                 isnan = True
                 break
         if isnan:
-            sys.stderr.write("Warning: line %d of file '%s' has NaNs, skipping line"%(i,filename))
+            sys.stderr.write("Warning: line %d of file '%s' has NaNs, skipping line\n"%(i,filename))
             continue
         list_ok.append(l)
     traj = dict([(l[0],transform44(l[0:])) for l in list_ok])
@@ -73,6 +73,14 @@ def find_closest_index(L,t):
 def ominus(a,b):
     return numpy.dot(numpy.linalg.inv(a),b)
 
+def scale(a,scalar):
+    return numpy.array(
+        [[a[0,0], a[0,1], a[0,2], a[0,3]*scalar],
+         [a[1,0], a[1,1], a[1,2], a[1,3]*scalar],
+         [a[2,0], a[2,1], a[2,2], a[2,3]*scalar],
+         [a[3,0], a[3,1], a[3,2], a[3,3]]]
+                       )
+
 def compute_distance(transform):
     return numpy.linalg.norm(transform[0:3,3])
 
@@ -91,19 +99,19 @@ def distances_along_trajectory(traj):
         distances.append(sum)
     return distances
     
-def rotations_along_trajectory(traj):
+def rotations_along_trajectory(traj,scale):
     keys = traj.keys()
     keys.sort()
     motion = [ominus(traj[keys[i+1]],traj[keys[i]]) for i in range(len(keys)-1)]
     distances = [0]
     sum = 0
     for t in motion:
-        sum += compute_angle(t)
+        sum += compute_angle(t)*scale
         distances.append(sum)
     return distances
     
 
-def evaluate_trajectory(traj_gt,traj_est,param_max_pairs=10000,param_fixed_delta=False,param_delta=1.00,param_delta_unit="s",param_offset=0.00):
+def evaluate_trajectory(traj_gt,traj_est,param_max_pairs=10000,param_fixed_delta=False,param_delta=1.00,param_delta_unit="s",param_offset=0.00,param_scale=1.00):
     stamps_gt = list(traj_gt.keys())
     stamps_est = list(traj_est.keys())
     stamps_gt.sort()
@@ -111,9 +119,9 @@ def evaluate_trajectory(traj_gt,traj_est,param_max_pairs=10000,param_fixed_delta
     
     stamps_est_return = []
     for t_est in stamps_est:
-        t_gt = stamps_gt[find_closest_index(stamps_gt,t_est - param_offset)]
-        t_est_return = stamps_est[find_closest_index(stamps_est,t_gt + param_offset)]
-        t_gt_return = stamps_gt[find_closest_index(stamps_gt,t_est_return - param_offset)]
+        t_gt = stamps_gt[find_closest_index(stamps_gt,t_est + param_offset)]
+        t_est_return = stamps_est[find_closest_index(stamps_est,t_gt - param_offset)]
+        t_gt_return = stamps_gt[find_closest_index(stamps_gt,t_est_return + param_offset)]
         if not t_est_return in stamps_est_return:
             stamps_est_return.append(t_est_return)
     if(len(stamps_est_return)<2):
@@ -125,7 +133,9 @@ def evaluate_trajectory(traj_gt,traj_est,param_max_pairs=10000,param_fixed_delta
     elif param_delta_unit=="m":
         index_est = distances_along_trajectory(traj_est)
     elif param_delta_unit=="rad":
-        index_est = rotations_along_trajectory(traj_est)
+        index_est = rotations_along_trajectory(traj_est,1)
+    elif param_delta_unit=="deg":
+        index_est = rotations_along_trajectory(traj_est,180/numpy.pi)
     elif param_delta_unit=="f":
         index_est = range(len(traj_est))
     else:
@@ -153,14 +163,15 @@ def evaluate_trajectory(traj_gt,traj_est,param_max_pairs=10000,param_fixed_delta
         stamp_est_0 = stamps_est[i]
         stamp_est_1 = stamps_est[j]
 
-        stamp_gt_0 = stamps_gt[ find_closest_index(stamps_gt,stamp_est_0 - param_offset) ]
-        stamp_gt_1 = stamps_gt[ find_closest_index(stamps_gt,stamp_est_1 - param_offset) ]
+        stamp_gt_0 = stamps_gt[ find_closest_index(stamps_gt,stamp_est_0 + param_offset) ]
+        stamp_gt_1 = stamps_gt[ find_closest_index(stamps_gt,stamp_est_1 + param_offset) ]
         
-        if(abs(stamp_gt_0 - (stamp_est_0 - param_offset)) > gt_max_time_difference  or
-           abs(stamp_gt_1 - (stamp_est_1 - param_offset)) > gt_max_time_difference):
+        if(abs(stamp_gt_0 - (stamp_est_0 + param_offset)) > gt_max_time_difference  or
+           abs(stamp_gt_1 - (stamp_est_1 + param_offset)) > gt_max_time_difference):
             continue
         
-        error44 = ominus(  ominus( traj_est[stamp_est_1], traj_est[stamp_est_0] ),
+        error44 = ominus(  scale(
+                           ominus( traj_est[stamp_est_1], traj_est[stamp_est_0] ),param_scale),
                            ominus( traj_gt[stamp_gt_1], traj_gt[stamp_gt_0] ) )
         
         trans = compute_distance(error44)
@@ -172,6 +183,11 @@ def evaluate_trajectory(traj_gt,traj_est,param_max_pairs=10000,param_fixed_delta
         raise Exception("Couldn't find matching timestamp pairs between groundtruth and estimated trajectory!")
         
     return result
+
+def percentile(seq,q):
+    seq_sorted = list(seq)
+    seq_sorted.sort()
+    return seq_sorted[int((len(seq_sorted)-1)*q)]
 
 if __name__ == '__main__':
     random.seed(0)
@@ -185,9 +201,11 @@ if __name__ == '__main__':
     parser.add_argument('--fixed_delta', help='only consider pose pairs that have a distance of delta delta_unit (e.g., for evaluating the drift per second/meter/radian)', action='store_true')
     parser.add_argument('--delta', help='delta for evaluation (default: 1.0)',default=1.0)
     parser.add_argument('--delta_unit', help='unit of delta (options: \'s\' for seconds, \'m\' for meters, \'rad\' for radians, \'f\' for frames; default: \'s\')',default='s')
-    parser.add_argument('--offset', help='time offset between ground-truth and estimated trajectory (default: 0.0)',default=0.0)
+    parser.add_argument('--offset', help='time offset added to the timestamps of the estimated trajectory (default: 0.0)',default=0.0)
+    parser.add_argument('--scale', help='scaling factor for the estimated trajectory (default: 1.0)',default=1.0)
     parser.add_argument('--save', help='text file to which the evaluation will be saved (format: stamp_est0 stamp_est1 stamp_gt0 stamp_gt1 trans_error rot_error)')
-    parser.add_argument('--verbose', help='print all evaluation data (otherwise, only the mean translational error measured in meters will be printed)', action='store_true')
+    parser.add_argument('--percentiles', help='number of percentiles to evaluate (default: disabled)', default=0)
+    parser.add_argument('--verbose', help='print all evaluation data (otherwise, only the RMSE translational error measured in meters will be printed)', action='store_true')
     args = parser.parse_args()
     
     traj_gt = read_trajectory(args.groundtruth_file)
@@ -199,7 +217,8 @@ if __name__ == '__main__':
                                  args.fixed_delta,
                                  float(args.delta),
                                  args.delta_unit,
-                                 float(args.offset))
+                                 float(args.offset),
+                                 float(args.scale))
     
     trans_error = numpy.array(result)[:,4]
     rot_error = numpy.array(result)[:,5]
@@ -218,6 +237,12 @@ if __name__ == '__main__':
         print "translational_error.std %f m"%numpy.std(trans_error)
         print "translational_error.min %f m"%numpy.min(trans_error)
         print "translational_error.max %f m"%numpy.max(trans_error)
+        
+        percentiles = int(args.percentiles)
+        if(percentiles>0):
+            for p in range(percentiles+1):
+                q = 1.0 / (percentiles) * p
+                print "translational_error.percentile.%0.2f %f m"%(q,percentile(trans_error,q))
 
         print "rotational_error.rmse %f deg"%(numpy.sqrt(numpy.dot(rot_error,rot_error) / len(rot_error)) * 180.0 / numpy.pi)
         print "rotational_error.mean %f deg"%(numpy.mean(rot_error) * 180.0 / numpy.pi)
@@ -225,5 +250,12 @@ if __name__ == '__main__':
         print "rotational_error.std %f deg"%(numpy.std(rot_error) * 180.0 / numpy.pi)
         print "rotational_error.min %f deg"%(numpy.min(rot_error) * 180.0 / numpy.pi)
         print "rotational_error.max %f deg"%(numpy.max(rot_error) * 180.0 / numpy.pi)
+
+        if(percentiles>0):
+            percentiles = int(args.percentiles)
+            for p in range(percentiles+1):
+                q = 1.0 / (percentiles) * p
+                print "translational_error.percentile.%0.2f %f m"%(q,percentile(rot_error,q))
+
     else:
         print numpy.sqrt(numpy.dot(trans_error,trans_error) / len(trans_error))

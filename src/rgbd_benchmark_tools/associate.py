@@ -8,6 +8,7 @@ import sys
 import os
 import numpy
 
+
 def read_file_list(filename):
     file = open(filename)
     data = file.read()
@@ -16,6 +17,23 @@ def read_file_list(filename):
     list = [(float(l[0]),l[1:]) for l in list if len(l)>1]
     return dict(list)
 
+def associate(first_list, second_list,offset,max_difference):
+    first_keys = first_list.keys()
+    second_keys = second_list.keys()
+    potential_matches = [(abs(a - (b + offset)), a, b) 
+                         for a in first_keys 
+                         for b in second_keys 
+                         if abs(a - (b + offset)) < max_difference]
+    potential_matches.sort()
+    matches = []
+    for diff, a, b in potential_matches:
+        if a in first_keys and b in second_keys:
+            first_keys.remove(a)
+            second_keys.remove(b)
+            matches.append((a, b))
+    
+    matches.sort()
+    return matches
 
 if __name__ == '__main__':
     
@@ -30,26 +48,10 @@ if __name__ == '__main__':
     parser.add_argument('--max_difference', help='maximally allowed time difference for matching entries (default: 0.02)',default=0.02)
     args = parser.parse_args()
 
-    args.max_difference = float(args.max_difference)
-    args.offset = float(args.offset)
-    
     first_list = read_file_list(args.first_file)
     second_list = read_file_list(args.second_file)
-    
-    first_keys = first_list.keys()
-    second_keys = second_list.keys()
 
-    potential_matches = [(abs(a-(b+args.offset)),a,b) for a in first_keys for b in second_keys if abs(a-(b+args.offset)) < args.max_difference]
-    potential_matches.sort()
-
-    matches = []
-    for diff,a,b in potential_matches:
-        if a in first_keys and b in second_keys:
-            first_keys.remove(a)
-            second_keys.remove(b)
-            matches.append((a,b))
-
-    matches.sort()    
+    matches = associate(first_list, second_list,float(args.offset),float(args.max_difference))    
 
     if args.first_only:
         for a,b in matches:
