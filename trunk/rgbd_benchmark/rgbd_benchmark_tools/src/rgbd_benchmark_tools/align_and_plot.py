@@ -54,6 +54,9 @@ if __name__=="__main__":
     second_list = associate.read_file_list(args.second_file)
 
     matches = associate.associate(first_list, second_list,float(args.offset),float(args.max_difference))    
+    if len(matches)<2:
+        sys.exit("Couldn't find matching timestamp pairs between groundtruth and estimated trajectory! Did you choose the correct sequence?")
+
 
     first_xyz = numpy.matrix([[float(value) for value in first_list[a][0:3]] for a,b in matches]).transpose()
     second_xyz = numpy.matrix([[float(value)*float(args.scale) for value in second_list[b][0:3]] for a,b in matches]).transpose()
@@ -71,6 +74,8 @@ if __name__=="__main__":
     second_xyz_full_aligned = rot * second_xyz_full + trans
     
     if args.verbose:
+        print "compared_pose_pairs %d pairs"%(len(trans_error))
+
         print "absolute_translational_error.rmse %f m"%numpy.sqrt(numpy.dot(trans_error,trans_error) / len(trans_error))
         print "absolute_translational_error.mean %f m"%numpy.mean(trans_error)
         print "absolute_translational_error.median %f m"%numpy.median(trans_error)
