@@ -21,6 +21,7 @@ if __name__ == '__main__':
     parser.add_argument('--delta', help='delta for evaluation (default: 1.0)',default=1.0)
     parser.add_argument('--delta_unit', help='unit of delta (options: \'s\' for seconds, \'m\' for meters, \'rad\' for radians, \'f\' for frames; default: \'s\')',default='s')
     parser.add_argument('--offset', help='time offset between ground-truth and estimated trajectory (default: 0.0)',default=0.0)
+    parser.add_argument('--scale', help='scaling factor for the estimated trajectory (default: 1.0)',default=1.0)
     parser.add_argument('--save', help='text file to which the evaluation will be saved (format: stamp_est0 stamp_est1 stamp_gt0 stamp_gt1 trans_error rot_error)')
     parser.add_argument('--plot', help='plot the result to a file (format: png)')
     parser.add_argument('--verbose', help='print all evaluation data (otherwise, only the mean translational error measured in meters will be printed)', action='store_true')
@@ -35,7 +36,8 @@ if __name__ == '__main__':
                                  True,
                                  float(args.delta),
                                  args.delta_unit,
-                                 float(args.offset))
+                                 float(args.offset),
+                                 float(args.scale))
     
     stamps = numpy.array(result)[:,0]
     trans_error = numpy.array(result)[:,4]
@@ -72,6 +74,6 @@ if __name__ == '__main__':
         #ax.plot([t for t,e in err_rot],[e for t,e in err_rot],'-',color="red")
         ax.set_xlabel('time [s]')
         ax.set_ylabel('translational error [m]')
-        plt.savefig(args.plot,dpi=70)
+        plt.savefig(args.plot,dpi=80)
         
 
