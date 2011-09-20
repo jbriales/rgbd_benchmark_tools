@@ -105,5 +105,5 @@ if __name__=="__main__":
             
         ax.set_xlabel('x [m]')
         ax.set_ylabel('y [m]')
-        plt.savefig(args.plot,dpi=70)
+        plt.savefig(args.plot,dpi=80)
         
