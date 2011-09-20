@@ -74,6 +74,6 @@ if __name__ == '__main__':
         #ax.plot([t for t,e in err_rot],[e for t,e in err_rot],'-',color="red")
         ax.set_xlabel('time [s]')
         ax.set_ylabel('translational error [m]')
-        plt.savefig(args.plot,dpi=80)
+        plt.savefig(args.plot,dpi=90)
         
 
