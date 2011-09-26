@@ -73,6 +73,7 @@ if __name__ == '__main__':
     parser.add_argument('--traj_offset', help='time offset added to the timestamps of the trajectory file (default: 0.00)',default=0.00)
     parser.add_argument('--traj_max_difference', help='maximally allowed time difference for matching rgb and traj entries (default: 0.01)',default=0.01)
     parser.add_argument('--downsample', help='downsample images by this factor (default: 1)',default=1)
+    parser.add_argument('--nth', help='only consider every nth image pair (default: 1)',default=1)
     parser.add_argument('--individual', help='save individual point clouds (instead of one large point cloud)', action='store_true')
     
     parser.add_argument('ply_file', help='output PLY file (format: ply)')
@@ -89,13 +90,15 @@ if __name__ == '__main__':
     traj = read_trajectory(args.trajectory_file)
     
     all_points = []
-    for rgb_stamp,traj_stamp in matches_rgb_traj:
+    for i in range(0,len(matches_rgb_traj),int(args.nth)):
+        rgb_stamp,traj_stamp = matches_rgb_traj[i]
         rgb_file = rgb_list[rgb_stamp][0]
         depth_file = depth_list[matches_rgb_depth[rgb_stamp]][0]
         pose = traj[traj_stamp]
-        points = generate_pointcloud(rgb_file,depth_file,pose,10)
+        points = generate_pointcloud(rgb_file,depth_file,pose,int(args.downsample))
         if args.individual:
             write_ply("%s-%f.ply"%(os.path.splitext(args.ply_file)[0],rgb_stamp),points)
         else:
             all_points += points
+            print "Number of points so far: %d"%len(all_points)
     write_ply(args.ply_file,all_points)
