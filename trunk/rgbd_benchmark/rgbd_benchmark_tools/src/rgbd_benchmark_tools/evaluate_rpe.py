@@ -53,7 +53,7 @@ def plot_traj(ax,stamps,traj,style,color,label):
 if __name__=="__main__":
     # parse command line
     parser = argparse.ArgumentParser(description='''
-    This script takes two trajectory files with different coordinate systems, aligns them, and outputs the aligned version of the second file.   
+    This script computes the absolute trajectory error from the ground truth trajectory and the estimated trajectory. 
     ''')
     parser.add_argument('first_file', help='first text file (format: timestamp tx ty tz qx qy qz qw)')
     parser.add_argument('second_file', help='second text file (format: timestamp tx ty tz qx qy qz qw)')
