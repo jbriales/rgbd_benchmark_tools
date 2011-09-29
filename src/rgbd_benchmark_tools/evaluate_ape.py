@@ -189,7 +189,7 @@ if __name__ == '__main__':
     random.seed(0)
 
     parser = argparse.ArgumentParser(description='''
-    This script reads a ground-truth trajectory and an estimated trajectory, and computes the (translational) error.
+    This script computes the relative pose error from the ground truth trajectory and the estimated trajectory. 
     ''')
     parser.add_argument('groundtruth_file', help='ground-truth trajectory file (format: "timestamp tx ty tz qx qy qz qw")')
     parser.add_argument('estimated_file', help='estimated trajectory file (format: "timestamp tx ty tz qx qy qz qw")')
