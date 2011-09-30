@@ -7,7 +7,7 @@ import argparse
 import sys
 import os
 from associate import *
-from evaluate import *
+from evaluate_rpe import *
 from generate_pointcloud import *
 from PIL import Image
 
