@@ -40,8 +40,6 @@ if __name__ == '__main__':
     stamps = image_list.keys()
     stamps.sort()
     
-    n = int(args.n)
-    
     matches_dict = dict(matches)
     for stamp in stamps:
         image_file = image_list[stamp][0]
