@@ -90,7 +90,8 @@ if __name__ == '__main__':
     traj = read_trajectory(args.trajectory_file)
     
     all_points = []
-    for i in range(0,len(matches_rgb_traj),int(args.nth)):
+    list  = range(0,len(matches_rgb_traj),int(args.nth))
+    for frame,i in enumerate(list):
         rgb_stamp,traj_stamp = matches_rgb_traj[i]
         rgb_file = rgb_list[rgb_stamp][0]
         depth_file = depth_list[matches_rgb_depth[rgb_stamp]][0]
@@ -100,5 +101,5 @@ if __name__ == '__main__':
             write_ply("%s-%f.ply"%(os.path.splitext(args.ply_file)[0],rgb_stamp),points)
         else:
             all_points += points
-            print "Number of points so far: %d"%len(all_points)
+            print "Frame %d/%d, number of points so far: %d"%(frame+1,len(list),len(all_points))
     write_ply(args.ply_file,all_points)
