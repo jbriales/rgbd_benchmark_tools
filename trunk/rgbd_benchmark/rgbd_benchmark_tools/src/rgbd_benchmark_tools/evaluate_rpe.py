@@ -27,7 +27,7 @@ def transform44(l):
         (                0.0,                 0.0,                 0.0, 1.0)
         ), dtype=numpy.float64)
 
-def read_trajectory(filename):
+def read_trajectory(filename, matrix=True):
     file = open(filename)
     data = file.read()
     lines = data.replace(","," ").replace("\t"," ").split("\n") 
@@ -45,7 +45,10 @@ def read_trajectory(filename):
             sys.stderr.write("Warning: line %d of file '%s' has NaNs, skipping line\n"%(i,filename))
             continue
         list_ok.append(l)
-    traj = dict([(l[0],transform44(l[0:])) for l in list_ok])
+    if matrix :
+      traj = dict([(l[0],transform44(l[0:])) for l in list_ok])
+    else:
+      traj = dict([(l[0],l[1:8]) for l in list_ok])
     return traj
 
 def find_closest_index(L,t):
@@ -258,6 +261,6 @@ if __name__ == '__main__':
         #ax.plot([t for t,e in err_rot],[e for t,e in err_rot],'-',color="red")
         ax.set_xlabel('time [s]')
         ax.set_ylabel('translational error [m]')
-        plt.savefig(args.plot,dpi=90)
+        plt.savefig(args.plot,dpi=300)
         
 
