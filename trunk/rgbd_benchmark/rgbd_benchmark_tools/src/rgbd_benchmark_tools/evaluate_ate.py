@@ -131,5 +131,5 @@ if __name__=="__main__":
             
         ax.set_xlabel('x [m]')
         ax.set_ylabel('y [m]')
-        plt.savefig(args.plot,dpi=90)
+        plt.savefig(args.plot,figsize=(8, 6), dpi=80)
         
