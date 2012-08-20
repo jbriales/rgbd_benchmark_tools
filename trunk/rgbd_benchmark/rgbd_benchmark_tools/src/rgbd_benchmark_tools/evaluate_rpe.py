@@ -4,28 +4,12 @@ import argparse
 import random
 import numpy
 import sys
-
-_EPS = numpy.finfo(float).eps * 4.0
+import transformations
 
 def transform44(l):
     t = l[1:4]
-    q = numpy.array(l[4:8], dtype=numpy.float64, copy=True)
-    nq = numpy.dot(q, q)
-    if nq < _EPS:
-        return numpy.array((
-        (                1.0,                 0.0,                 0.0, t[0])
-        (                0.0,                 1.0,                 0.0, t[1])
-        (                0.0,                 0.0,                 1.0, t[2])
-        (                0.0,                 0.0,                 0.0, 1.0)
-        ), dtype=numpy.float64)
-    q *= numpy.sqrt(2.0 / nq)
-    q = numpy.outer(q, q)
-    return numpy.array((
-        (1.0-q[1, 1]-q[2, 2],     q[0, 1]-q[2, 3],     q[0, 2]+q[1, 3], t[0]),
-        (    q[0, 1]+q[2, 3], 1.0-q[0, 0]-q[2, 2],     q[1, 2]-q[0, 3], t[1]),
-        (    q[0, 2]-q[1, 3],     q[1, 2]+q[0, 3], 1.0-q[0, 0]-q[1, 1], t[2]),
-        (                0.0,                 0.0,                 0.0, 1.0)
-        ), dtype=numpy.float64)
+    q = l[4:8]
+    return numpy.dot(transformations.translation_matrix(t),transformations.quaternion_matrix(q))
 
 def read_trajectory(filename, matrix=True):
     file = open(filename)
@@ -108,13 +92,59 @@ def rotations_along_trajectory(traj,scale):
         sum += compute_angle(t)*scale
         distances.append(sum)
     return distances
-    
 
-def evaluate_trajectory(traj_gt,traj_est,param_max_pairs=10000,param_fixed_delta=False,param_delta=1.00,param_delta_unit="s",param_offset=0.00,param_scale=1.00):
+def interpolate_transformation(alpha,a,b):
+    qa,ta = transformations.quaternion_from_matrix(a),transformations.translation_from_matrix(a)
+    qb,tb = transformations.quaternion_from_matrix(b),transformations.translation_from_matrix(b)
+    qr = transformations.quaternion_slerp(qa,qb,alpha)
+    tr = (1-alpha) * ta + (alpha) * tb
+    r = numpy.dot(transformations.translation_matrix(tr),transformations.quaternion_matrix(qr))
+    return r
+        
+def interpolate_and_resample(traj_gt,stamps_est,param_offset,gt_max_time_difference):
+    traj_new = {}
+    
     stamps_gt = list(traj_gt.keys())
-    stamps_est = list(traj_est.keys())
     stamps_gt.sort()
+    
+    for t_est in stamps_est:
+        t_new = t_est + param_offset
+        i_nearest = find_closest_index(stamps_gt,t_est + param_offset)
+        if stamps_gt[i_nearest] >= t_new and i_nearest>0:
+            i_low = i_nearest-1
+            i_high = i_nearest
+        else:
+            i_low = i_nearest
+            i_high = i_nearest+1
+        if i_low<0 or i_high>=len(stamps_gt):
+            continue
+
+        t_low = stamps_gt[i_low]   
+        t_high = stamps_gt[i_high]
+           
+        if(abs( t_new - (t_low + param_offset) ) > gt_max_time_difference or
+           abs( t_new - (t_high + param_offset) ) > gt_max_time_difference):
+            continue
+
+        alpha = (t_new - (t_low + param_offset)) / (t_high - t_low)
+        transform = interpolate_transformation(alpha,traj_gt[t_low],traj_gt[t_high])
+        traj_new[t_new] = transform
+    return traj_new
+            
+
+def evaluate_trajectory(traj_gt,traj_est,param_max_pairs=10000,param_fixed_delta=False,param_delta=1.00,param_delta_unit="s",param_offset=0.00,param_scale=1.00,param_interpolation=True):
+    stamps_est = list(traj_est.keys())
     stamps_est.sort()
+    stamps_gt = list(traj_gt.keys())
+    stamps_gt.sort()
+
+    gt_interval = numpy.median([s-t for s,t in zip(stamps_gt[1:],stamps_gt[:-1])])
+    gt_max_time_difference = 2*gt_interval
+
+    if param_interpolation:
+        traj_gt = interpolate_and_resample(traj_gt,stamps_est,param_offset,gt_max_time_difference)
+        stamps_gt = list(traj_gt.keys())
+        stamps_gt.sort()
     
     stamps_est_return = []
     for t_est in stamps_est:
@@ -153,10 +183,7 @@ def evaluate_trajectory(traj_gt,traj_est,param_max_pairs=10000,param_fixed_delta
                 pairs.append((i,j))
         if(param_max_pairs!=0 and len(pairs)>param_max_pairs):
             pairs = random.sample(pairs,param_max_pairs)
-    
-    gt_interval = numpy.median([s-t for s,t in zip(stamps_gt[1:],stamps_gt[:-1])])
-    gt_max_time_difference = 2*gt_interval
-    
+        
     result = []
     for i,j in pairs:
         stamp_est_0 = stamps_est[i]
@@ -196,6 +223,7 @@ if __name__ == '__main__':
     ''')
     parser.add_argument('groundtruth_file', help='ground-truth trajectory file (format: "timestamp tx ty tz qx qy qz qw")')
     parser.add_argument('estimated_file', help='estimated trajectory file (format: "timestamp tx ty tz qx qy qz qw")')
+    parser.add_argument('--interpolate', help='interpolate and resample the ground truth trajectory', action='store_true')
     parser.add_argument('--max_pairs', help='maximum number of pose comparisons (default: 10000, set to zero to disable downsampling)', default=10000)
     parser.add_argument('--fixed_delta', help='only consider pose pairs that have a distance of delta delta_unit (e.g., for evaluating the drift per second/meter/radian)', action='store_true')
     parser.add_argument('--delta', help='delta for evaluation (default: 1.0)',default=1.0)
@@ -220,7 +248,8 @@ if __name__ == '__main__':
                                  float(args.delta),
                                  args.delta_unit,
                                  float(args.offset),
-                                 float(args.scale))
+                                 float(args.scale),
+                                 args.interpolate)
     
     stamps = numpy.array(result)[:,0]
     trans_error = numpy.array(result)[:,4]
