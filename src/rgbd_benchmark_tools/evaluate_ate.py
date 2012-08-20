@@ -49,6 +49,59 @@ def plot_traj(ax,stamps,traj,style,color,label):
     if len(x)>0:
         ax.plot(x,y,style,color=color,label=label)
             
+def find_closest_index(L,t):
+    beginning = 0
+    difference = abs(L[0] - t)
+    best = 0
+    end = len(L)
+    while beginning < end:
+        middle = int((end+beginning)/2)
+        if abs(L[middle] - t) < difference:
+            difference = abs(L[middle] - t)
+            best = middle
+        if t == L[middle]:
+            return middle
+        elif L[middle] > t:
+            end = middle
+        else:
+            beginning = middle + 1
+    return best
+
+def interpolate_transformation(alpha,a,b):
+    ta = numpy.matrix([float(v) for v in a[0:3]])
+    tb = numpy.matrix([float(v) for v in b[0:3]])
+    tr = (1-alpha) * ta + (alpha) * tb
+    return tr.tolist()[0]
+        
+def interpolate_and_resample(traj_gt,stamps_est,param_offset,gt_max_time_difference):
+    traj_new = {}
+    
+    stamps_gt = list(traj_gt.keys())
+    stamps_gt.sort()
+    
+    for t_est in stamps_est:
+        t_new = t_est + param_offset
+        i_nearest = find_closest_index(stamps_gt,t_est + param_offset)
+        if stamps_gt[i_nearest] >= t_new and i_nearest>0:
+            i_low = i_nearest-1
+            i_high = i_nearest
+        else:
+            i_low = i_nearest
+            i_high = i_nearest+1
+        if i_low<0 or i_high>=len(stamps_gt):
+            continue
+
+        t_low = stamps_gt[i_low]   
+        t_high = stamps_gt[i_high]
+           
+        if(abs( t_new - (t_low + param_offset) ) > gt_max_time_difference or
+           abs( t_new - (t_high + param_offset) ) > gt_max_time_difference):
+            continue
+
+        alpha = (t_new - (t_low + param_offset)) / (t_high - t_low)
+        transform = interpolate_transformation(alpha,traj_gt[t_low],traj_gt[t_high])
+        traj_new[t_new] = transform
+    return traj_new
 
 if __name__=="__main__":
     # parse command line
@@ -57,6 +110,7 @@ if __name__=="__main__":
     ''')
     parser.add_argument('first_file', help='ground truth trajectory (format: timestamp tx ty tz qx qy qz qw)')
     parser.add_argument('second_file', help='estimated trajectory (format: timestamp tx ty tz qx qy qz qw)')
+    parser.add_argument('--interpolate', help='interpolate and resample the ground truth trajectory', action='store_true')
     parser.add_argument('--offset', help='time offset added to the timestamps of the second file (default: 0.0)',default=0.0)
     parser.add_argument('--scale', help='scaling factor for the second trajectory (default: 1.0)',default=1.0)
     parser.add_argument('--max_difference', help='maximally allowed time difference for matching entries (default: 0.02)',default=0.02)
@@ -68,11 +122,13 @@ if __name__=="__main__":
 
     first_list = associate.read_file_list(args.first_file)
     second_list = associate.read_file_list(args.second_file)
+    
+    if args.interpolate:
+       first_list = interpolate_and_resample(first_list,list(second_list.keys()),float(args.offset),float(args.max_difference)*2)
 
     matches = associate.associate(first_list, second_list,float(args.offset),float(args.max_difference))    
     if len(matches)<2:
         sys.exit("Couldn't find matching timestamp pairs between groundtruth and estimated trajectory! Did you choose the correct sequence?")
-
 
     first_xyz = numpy.matrix([[float(value) for value in first_list[a][0:3]] for a,b in matches]).transpose()
     second_xyz = numpy.matrix([[float(value)*float(args.scale) for value in second_list[b][0:3]] for a,b in matches]).transpose()
