@@ -203,7 +203,11 @@ def evaluate_trajectory(traj_gt,traj_est,param_max_pairs=10000,param_fixed_delta
         trans = compute_distance(error44)
         rot = compute_angle(error44)
         
-        result.append([stamp_est_0,stamp_est_1,stamp_gt_0,stamp_gt_1,trans,rot])
+        motion_gt = ominus( traj_gt[stamp_gt_1], traj_gt[stamp_gt_0] )
+        trans_gt = compute_distance(motion_gt)
+        rot_gt = compute_angle(motion_gt)
+        
+        result.append([stamp_est_0,stamp_est_1,stamp_gt_0,stamp_gt_1,trans,rot,trans_gt,rot_gt])
         
     if len(result)<2:
         raise Exception("Couldn't find matching timestamp pairs between groundtruth and estimated trajectory!")
