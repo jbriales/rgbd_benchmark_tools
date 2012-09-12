@@ -178,10 +178,10 @@ if __name__=="__main__":
         plot_traj(ax,first_stamps,first_xyz_full.transpose().A,'-',"black","ground truth")
         plot_traj(ax,second_stamps,second_xyz_full_aligned.transpose().A,'-',"blue","estimated")
 
-        #label="difference"
-        #for (a,b),(x1,y1,z1),(x2,y2,z2) in zip(matches,first_xyz.transpose().A,second_xyz_aligned.transpose().A):
-        #    ax.plot([x1,x2],[y1,y2],'-',color="red",label=label)
-        #    label=""
+        label="difference"
+        for (a,b),(x1,y1,z1),(x2,y2,z2) in zip(matches,first_xyz.transpose().A,second_xyz_aligned.transpose().A):
+            ax.plot([x1,x2],[y1,y2],'-',color="red",label=label)
+            label=""
             
         ax.legend()
             
