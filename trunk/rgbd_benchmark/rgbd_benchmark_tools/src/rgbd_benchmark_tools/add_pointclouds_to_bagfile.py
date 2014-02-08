@@ -1,6 +1,5 @@
 #!/usr/bin/python
 #
-# this script requires ROS diamondback
 # for installation instructions, see http://www.ros.org 
 
 import argparse
