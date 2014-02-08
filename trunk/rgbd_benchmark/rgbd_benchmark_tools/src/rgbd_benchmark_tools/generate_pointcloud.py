@@ -14,6 +14,15 @@ centerY = 239.5
 scalingFactor = 5000.0
 
 def generate_pointcloud(rgb_file,depth_file,ply_file):
+    """
+    Generate a colored point cloud in PLY format from a color and a depth image.
+    
+    Input:
+    rgb_file -- filename of color image
+    depth_file -- filename of depth image
+    ply_file -- filename of ply file
+    
+    """
     rgb = Image.open(rgb_file)
     depth = Image.open(depth_file)
     

@@ -58,6 +58,21 @@ end_header
 
 
 def generate_pointcloud(rgb_file,depth_file,transform,downsample,pcd=False):
+    """
+    Generate a colored point cloud 
+    
+    Input:
+    rgb_file -- filename of color image
+    depth_file -- filename of depth image
+    transform -- camera pose, specified as a 4x4 homogeneous matrix
+    downsample -- downsample point cloud in x/y direction
+    pcd -- true: output in (binary) PCD format
+           false: output in (text) PLY format
+           
+    Output:
+    list of colored points (either in binary or text format, see pcd flag)
+    """
+    
     rgb = Image.open(rgb_file)
     depth = Image.open(depth_file)
     

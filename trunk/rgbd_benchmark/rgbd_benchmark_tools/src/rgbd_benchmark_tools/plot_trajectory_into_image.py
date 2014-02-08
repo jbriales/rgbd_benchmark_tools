@@ -13,6 +13,17 @@ centerX = 319.5
 centerY = 239.5
 
 def point(pose,px,py,pz):
+    """
+    Project a 3D point into the camera.
+    
+    Input:
+    pose -- camera pose
+    px,py,pz -- point in global frame
+    
+    Output:
+    u,v -- pixel coordinates
+    
+    """
     p = pose.dot(numpy.matrix([[px],[py],[pz],[1]]))
     X = p[0,0]
     Y = p[1,0]
