@@ -41,6 +41,8 @@ import random
 import numpy
 import sys
 
+import h5py
+
 _EPS = numpy.finfo(float).eps * 4.0
 
 def transform44(l):
@@ -91,6 +93,38 @@ def read_trajectory(filename, matrix=True):
     list_ok = []
     for i,l in enumerate(list):
         if l[4:8]==[0,0,0,0]:
+            continue
+        isnan = False
+        for v in l:
+            if numpy.isnan(v): 
+                isnan = True
+                break
+        if isnan:
+            sys.stderr.write("Warning: line %d of file '%s' has NaNs, skipping line\n"%(i,filename))
+            continue
+        list_ok.append(l)
+    if matrix :
+      traj = dict([(l[0],transform44(l[0:])) for l in list_ok])
+    else:
+      traj = dict([(l[0],l[1:8]) for l in list_ok])
+    return traj
+    
+def read_trajectory_h5(dset, matrix=True):
+    """
+    Read a trajectory from a text file. 
+    
+    Input:
+    dset -- a HDF5 dataset of dimensions 8xN with trajectory poses in TUM format
+    matrix -- convert poses to 4x4 matrices
+    
+    Output:
+    dictionary of stamped 3D poses
+    """
+    list_ok = []
+    N = dset.shape[1];
+    for j in range(0,N):
+        l = dset[:,j].tolist();
+        if l==[0,0,0,0]:
             continue
         isnan = False
         for v in l:
@@ -312,6 +346,7 @@ if __name__ == '__main__':
     ''')
     parser.add_argument('groundtruth_file', help='ground-truth trajectory file (format: "timestamp tx ty tz qx qy qz qw")')
     parser.add_argument('estimated_file', help='estimated trajectory file (format: "timestamp tx ty tz qx qy qz qw")')
+    parser.add_argument('--h5file', help='HDF5 file in which the trajectories are stored as datasets (format: 8xN dataset, with "timestamp tx ty tz qx qy qz qw" as rows)',default="")
     parser.add_argument('--max_pairs', help='maximum number of pose comparisons (default: 10000, set to zero to disable downsampling)', default=10000)
     parser.add_argument('--fixed_delta', help='only consider pose pairs that have a distance of delta delta_unit (e.g., for evaluating the drift per second/meter/radian)', action='store_true')
     parser.add_argument('--delta', help='delta for evaluation (default: 1.0)',default=1.0)
@@ -326,8 +361,15 @@ if __name__ == '__main__':
     if args.plot and not args.fixed_delta:
         sys.exit("The '--plot' option can only be used in combination with '--fixed_delta'")
     
-    traj_gt = read_trajectory(args.groundtruth_file)
-    traj_est = read_trajectory(args.estimated_file)
+    if args.h5file == "":
+        traj_gt = read_trajectory(args.groundtruth_file)
+        traj_est = read_trajectory(args.estimated_file)
+    else:
+        h5f = h5py.File(args.h5file,'a')
+        dset_gt = h5f[args.groundtruth_file]
+        dset_est = h5f[args.estimated_file]
+        traj_gt = read_trajectory_h5(dset_gt)
+        traj_est = read_trajectory_h5(dset_est)
     
     result = evaluate_trajectory(traj_gt,
                                  traj_est,
@@ -341,6 +383,14 @@ if __name__ == '__main__':
     stamps = numpy.array(result)[:,0]
     trans_error = numpy.array(result)[:,4]
     rot_error = numpy.array(result)[:,5]
+    
+    if args.h5file != "":
+        # Save the results as attributes of the trajectory used
+        # Include delta_unit as part of the name
+        dset_est.attrs.create('stamps_'+args.delta_unit, stamps)
+        dset_est.attrs.create('allStamps_'+args.delta_unit, numpy.array(result)[:,0:4])
+        dset_est.attrs.create('trans_error_'+args.delta_unit, trans_error)
+        dset_est.attrs.create('rot_error_'+args.delta_unit, rot_error)
     
     if args.save:
         f = open(args.save,"w")
@@ -378,5 +428,3 @@ if __name__ == '__main__':
         ax.set_xlabel('time [s]')
         ax.set_ylabel('translational error [m]')
         plt.savefig(args.plot,dpi=300)
-        
-
