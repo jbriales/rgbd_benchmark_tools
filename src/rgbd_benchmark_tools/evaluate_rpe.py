@@ -38,12 +38,12 @@ and the estimated trajectory.
 
 import argparse
 import random
-import numpy
+import numpy as np
 import sys
 
 import h5py
 
-_EPS = numpy.finfo(float).eps * 4.0
+_EPS = np.finfo(float).eps * 4.0
 
 def transform44(l):
     """
@@ -57,23 +57,23 @@ def transform44(l):
     matrix -- 4x4 homogeneous transformation matrix
     """
     t = l[1:4]
-    q = numpy.array(l[4:8], dtype=numpy.float64, copy=True)
-    nq = numpy.dot(q, q)
+    q = np.array(l[4:8], dtype=np.float64, copy=True)
+    nq = np.dot(q, q)
     if nq < _EPS:
-        return numpy.array((
+        return np.array((
         (                1.0,                 0.0,                 0.0, t[0])
         (                0.0,                 1.0,                 0.0, t[1])
         (                0.0,                 0.0,                 1.0, t[2])
         (                0.0,                 0.0,                 0.0, 1.0)
-        ), dtype=numpy.float64)
-    q *= numpy.sqrt(2.0 / nq)
-    q = numpy.outer(q, q)
-    return numpy.array((
+        ), dtype=np.float64)
+    q *= np.sqrt(2.0 / nq)
+    q = np.outer(q, q)
+    return np.array((
         (1.0-q[1, 1]-q[2, 2],     q[0, 1]-q[2, 3],     q[0, 2]+q[1, 3], t[0]),
         (    q[0, 1]+q[2, 3], 1.0-q[0, 0]-q[2, 2],     q[1, 2]-q[0, 3], t[1]),
         (    q[0, 2]-q[1, 3],     q[1, 2]+q[0, 3], 1.0-q[0, 0]-q[1, 1], t[2]),
         (                0.0,                 0.0,                 0.0, 1.0)
-        ), dtype=numpy.float64)
+        ), dtype=np.float64)
 
 def read_trajectory(filename, matrix=True):
     """
@@ -96,7 +96,7 @@ def read_trajectory(filename, matrix=True):
             continue
         isnan = False
         for v in l:
-            if numpy.isnan(v): 
+            if np.isnan(v): 
                 isnan = True
                 break
         if isnan:
@@ -128,7 +128,7 @@ def read_trajectory_h5(dset, matrix=True):
             continue
         isnan = False
         for v in l:
-            if numpy.isnan(v): 
+            if np.isnan(v): 
                 isnan = True
                 break
         if isnan:
@@ -180,13 +180,13 @@ def ominus(a,b):
     Output:
     Relative 3D transformation from a to b.
     """
-    return numpy.dot(numpy.linalg.inv(a),b)
+    return np.dot(np.linalg.inv(a),b)
 
 def scale(a,scalar):
     """
     Scale the translational components of a 4x4 homogeneous matrix by a scale factor.
     """
-    return numpy.array(
+    return np.array(
         [[a[0,0], a[0,1], a[0,2], a[0,3]*scalar],
          [a[1,0], a[1,1], a[1,2], a[1,3]*scalar],
          [a[2,0], a[2,1], a[2,2], a[2,3]*scalar],
@@ -197,14 +197,14 @@ def compute_distance(transform):
     """
     Compute the distance of the translational component of a 4x4 homogeneous matrix.
     """
-    return numpy.linalg.norm(transform[0:3,3])
+    return np.linalg.norm(transform[0:3,3])
 
 def compute_angle(transform):
     """
     Compute the rotation angle from a 4x4 homogeneous matrix.
     """
     # an invitation to 3-d vision, p 27
-    return numpy.arccos( min(1,max(-1, (numpy.trace(transform[0:3,0:3]) - 1)/2) ))
+    return np.arccos( min(1,max(-1, (np.trace(transform[0:3,0:3]) - 1)/2) ))
 
 def distances_along_trajectory(traj):
     """
@@ -281,14 +281,14 @@ def evaluate_trajectory(traj_gt,traj_est,param_max_pairs=10000,param_fixed_delta
     elif param_delta_unit=="rad":
         index_est = rotations_along_trajectory(traj_est,1)
     elif param_delta_unit=="deg":
-        index_est = rotations_along_trajectory(traj_est,180/numpy.pi)
+        index_est = rotations_along_trajectory(traj_est,180/np.pi)
     elif param_delta_unit=="f":
         index_est = range(len(traj_est))
     else:
         raise Exception("Unknown unit for delta: '%s'"%param_delta_unit)
 
     if not param_fixed_delta:
-        if(param_max_pairs==0 or len(traj_est)<numpy.sqrt(param_max_pairs)):
+        if(param_max_pairs==0 or len(traj_est)<np.sqrt(param_max_pairs)):
             pairs = [(i,j) for i in range(len(traj_est)) for j in range(len(traj_est))]
         else:
             pairs = [(random.randint(0,len(traj_est)-1),random.randint(0,len(traj_est)-1)) for i in range(param_max_pairs)]
@@ -301,7 +301,7 @@ def evaluate_trajectory(traj_gt,traj_est,param_max_pairs=10000,param_fixed_delta
         if(param_max_pairs!=0 and len(pairs)>param_max_pairs):
             pairs = random.sample(pairs,param_max_pairs)
     
-    gt_interval = numpy.median([s-t for s,t in zip(stamps_gt[1:],stamps_gt[:-1])])
+    gt_interval = np.median([s-t for s,t in zip(stamps_gt[1:],stamps_gt[:-1])])
     gt_max_time_difference = 2*gt_interval
     
     result = []
@@ -380,17 +380,40 @@ if __name__ == '__main__':
                                  float(args.offset),
                                  float(args.scale))
     
-    stamps = numpy.array(result)[:,0]
-    trans_error = numpy.array(result)[:,4]
-    rot_error = numpy.array(result)[:,5]
+    stamps = np.array(result)[:,0]
+    trans_error = np.array(result)[:,4]
+    rot_error = np.array(result)[:,5]
     
     if args.h5file != "":
-        # Save the results as attributes of the trajectory used
-        # Include delta_unit as part of the name
-        dset_est.attrs.create('stamps_'+args.delta_unit, stamps)
-        dset_est.attrs.create('allStamps_'+args.delta_unit, numpy.array(result)[:,0:4])
-        dset_est.attrs.create('trans_error_'+args.delta_unit, trans_error)
-        dset_est.attrs.create('rot_error_'+args.delta_unit, rot_error)
+        # Create subgroup in the parent group of the estimation dataset
+        parent_group = dset_est.parent
+        eval_group = parent_group.require_group('eval/'+args.delta_unit)
+        
+        # Save the evaluation vectors as datasets in the eval group
+        eval_group.create_dataset('stamps', data=stamps)
+        eval_group.create_dataset('allStamps', data=np.array(result)[:,0:4])
+        eval_group.create_dataset('trans_error', data=trans_error)
+        eval_group.create_dataset('rot_error', data=rot_error)
+        
+        # Save the evaluation metrics as datasets of a single value in the eval group
+        t_rmse = np.sqrt(np.dot(trans_error,trans_error) / len(trans_error))
+        t_mean = np.mean(trans_error)
+        t_median = np.median(trans_error)
+        t_max = np.max(trans_error)
+        eval_group.create_dataset('t_rmse', data=t_rmse )
+        eval_group.create_dataset('t_mean', data=t_mean )
+        eval_group.create_dataset('t_median', data=t_median )
+        eval_group.create_dataset('t_max', data=t_max )
+        
+        r_rmse = np.sqrt(np.dot(rot_error,rot_error) / len(rot_error)) * 180.0 / np.pi
+        r_mean = np.mean(rot_error) * 180.0 / np.pi
+        r_median = np.median(rot_error) * 180.0 / np.pi
+        r_max = np.max(rot_error) * 180.0 / np.pi
+        eval_group.create_dataset('r_rmse', data=r_rmse )
+        eval_group.create_dataset('r_mean', data=r_mean )
+        eval_group.create_dataset('r_median', data=r_median )
+        eval_group.create_dataset('r_max', data=r_max )
+
     
     if args.save:
         f = open(args.save,"w")
@@ -400,21 +423,21 @@ if __name__ == '__main__':
     if args.verbose:
         print "compared_pose_pairs %d pairs"%(len(trans_error))
 
-        print "translational_error.rmse %f m"%numpy.sqrt(numpy.dot(trans_error,trans_error) / len(trans_error))
-        print "translational_error.mean %f m"%numpy.mean(trans_error)
-        print "translational_error.median %f m"%numpy.median(trans_error)
-        print "translational_error.std %f m"%numpy.std(trans_error)
-        print "translational_error.min %f m"%numpy.min(trans_error)
-        print "translational_error.max %f m"%numpy.max(trans_error)
+        print "translational_error.rmse %f m"%np.sqrt(np.dot(trans_error,trans_error) / len(trans_error))
+        print "translational_error.mean %f m"%np.mean(trans_error)
+        print "translational_error.median %f m"%np.median(trans_error)
+        print "translational_error.std %f m"%np.std(trans_error)
+        print "translational_error.min %f m"%np.min(trans_error)
+        print "translational_error.max %f m"%np.max(trans_error)
 
-        print "rotational_error.rmse %f deg"%(numpy.sqrt(numpy.dot(rot_error,rot_error) / len(rot_error)) * 180.0 / numpy.pi)
-        print "rotational_error.mean %f deg"%(numpy.mean(rot_error) * 180.0 / numpy.pi)
-        print "rotational_error.median %f deg"%numpy.median(rot_error)
-        print "rotational_error.std %f deg"%(numpy.std(rot_error) * 180.0 / numpy.pi)
-        print "rotational_error.min %f deg"%(numpy.min(rot_error) * 180.0 / numpy.pi)
-        print "rotational_error.max %f deg"%(numpy.max(rot_error) * 180.0 / numpy.pi)
+        print "rotational_error.rmse %f deg"%(np.sqrt(np.dot(rot_error,rot_error) / len(rot_error)) * 180.0 / np.pi)
+        print "rotational_error.mean %f deg"%(np.mean(rot_error) * 180.0 / np.pi)
+        print "rotational_error.median %f deg"%(np.median(rot_error) * 180.0 / np.pi)
+        print "rotational_error.std %f deg"%(np.std(rot_error) * 180.0 / np.pi)
+        print "rotational_error.min %f deg"%(np.min(rot_error) * 180.0 / np.pi)
+        print "rotational_error.max %f deg"%(np.max(rot_error) * 180.0 / np.pi)
     else:
-        print numpy.mean(trans_error)
+        print np.mean(trans_error)
 
     if args.plot:    
         import matplotlib
