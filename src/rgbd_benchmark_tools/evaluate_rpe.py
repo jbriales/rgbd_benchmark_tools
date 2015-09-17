@@ -386,8 +386,8 @@ if __name__ == '__main__':
     
     if args.h5file != "":
         # Create subgroup in the parent group of the estimation dataset
-        parent_group = dset_est.parent
-        eval_group = parent_group.require_group('eval/'+args.delta_unit)
+        sample_group = dset_est.parent
+        eval_group = sample_group.require_group('eval/'+args.delta_unit)
         
         # Save the evaluation vectors as datasets in the eval group
         eval_group.create_dataset('stamps', data=stamps)
