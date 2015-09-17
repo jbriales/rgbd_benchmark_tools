@@ -27,14 +27,15 @@ if __name__ == '__main__':
     # Save the evaluation metric values in the samples' parent group
     main_group = h5f[args.group]
     # Check if eval group already exists in the main group
-    if 'eval' in main_group:
-        print "Removing existing eval group in" + main_group.name
-        del main_group['eval']
+    if 'eval/'+unit in main_group:
+        print "Removing existing eval/"+unit + " group in" + main_group.name
+        del main_group['eval/'+unit]
     numOfSamples = len(main_group)
     
     # Create new eval group in the main group
     samples = main_group.keys()
-    eval_group = main_group.require_group('eval/'+args.delta_unit)
+    samples = [x for x in samples if x != 'eval']
+    eval_group = main_group.require_group('eval/'+unit)
     names = ['rmse','median','mean','max']
     for name in names:
         # Preallocate arrays
