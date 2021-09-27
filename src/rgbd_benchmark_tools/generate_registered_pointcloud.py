@@ -62,14 +62,14 @@ TYPE F F F F
 COUNT 1 1 1 1
 WIDTH %d
 HEIGHT 1
-VIEWPOINT %f %f %f %f %f %f %f 
+VIEWPOINT %f %f %f %f %f %f %f
 POINTS %d
 DATA binary
 %s
-'''%(len(points), pose[0], pose[1], pose[2], pose[6], pose[3], pose[4], pose[5]                         
+'''%(len(points), pose[0], pose[1], pose[2], pose[6], pose[3], pose[4], pose[5]
 ,len(points),"".join(points)))
     file.close()
-    print "Saved %d points to '%s'"%(len(points),pcd_file)
+    print("Saved %d points to '%s'"%(len(points),pcd_file))
 
 
 
@@ -89,13 +89,13 @@ end_header
 %s
 '''%(len(points),"".join(points)))
     file.close()
-    print "Saved %d points to '%s'"%(len(points),ply_file)
+    print("Saved %d points to '%s'"%(len(points),ply_file))
 
 
 def generate_pointcloud(rgb_file,depth_file,transform,downsample,pcd=False):
     """
-    Generate a colored point cloud 
-    
+    Generate a colored point cloud
+
     Input:
     rgb_file -- filename of color image
     depth_file -- filename of depth image
@@ -103,14 +103,14 @@ def generate_pointcloud(rgb_file,depth_file,transform,downsample,pcd=False):
     downsample -- downsample point cloud in x/y direction
     pcd -- true: output in (binary) PCD format
            false: output in (text) PLY format
-           
+
     Output:
     list of colored points (either in binary or text format, see pcd flag)
     """
-    
+
     rgb = Image.open(rgb_file)
     depth = Image.open(depth_file)
-    
+
     if rgb.size != depth.size:
         raise Exception("Color and depth image do not have the same resolution.")
     if rgb.mode != "RGB":
@@ -119,7 +119,7 @@ def generate_pointcloud(rgb_file,depth_file,transform,downsample,pcd=False):
         raise Exception("Depth image is not in intensity format")
 
 
-    points = []    
+    points = []
     for v in range(0,rgb.size[1],downsample):
         for u in range(0,rgb.size[0],downsample):
             color = rgb.getpixel((u,v))
@@ -133,13 +133,13 @@ def generate_pointcloud(rgb_file,depth_file,transform,downsample,pcd=False):
             else:
               vec_transf = numpy.dot(transform,vec_org)
               points.append("%f %f %f %d %d %d 0\n"%(vec_transf[0,0],vec_transf[1,0],vec_transf[2,0],color[0],color[1],color[2]))
-            
+
     return points
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='''
     This script reads a registered pair of color and depth images and generates a colored 3D point cloud in the
-    PLY format. 
+    PLY format.
     ''')
     parser.add_argument('rgb_list', help='input color image (format: timestamp filename)')
     parser.add_argument('depth_list', help='input depth image (format: timestamp filename)')
@@ -152,7 +152,7 @@ if __name__ == '__main__':
     parser.add_argument('--nth', help='only consider every nth image pair (default: 1)',default=1)
     parser.add_argument('--individual', help='save individual point clouds (instead of one large point cloud)', action='store_true')
     parser.add_argument('--pcd_format', help='Write pointclouds in pcd format (implies --individual)', action='store_true')
-    
+
     parser.add_argument('output_file', help='output PLY file (format: ply)')
     args = parser.parse_args()
 
@@ -160,16 +160,16 @@ if __name__ == '__main__':
     depth_list = read_file_list(args.depth_list)
     pose_list = read_file_list(args.trajectory_file)
 
-    matches_rgb_depth = dict(associate(rgb_list, depth_list,float(args.depth_offset),float(args.depth_max_difference)))    
+    matches_rgb_depth = dict(associate(rgb_list, depth_list,float(args.depth_offset),float(args.depth_max_difference)))
     matches_rgb_traj = associate(matches_rgb_depth, pose_list,float(args.traj_offset),float(args.traj_max_difference))
     matches_rgb_traj.sort()
-    
+
     if args.pcd_format:
       args.individual = True
       traj = read_trajectory(args.trajectory_file, False)
     else:
       traj = read_trajectory(args.trajectory_file)
-    
+
     all_points = []
     list  = range(0,len(matches_rgb_traj),int(args.nth))
     for frame,i in enumerate(list):
@@ -181,7 +181,7 @@ if __name__ == '__main__':
           else:
             out_filename = "%s-%f.ply"%(os.path.splitext(args.output_file)[0],rgb_stamp)
           if os.path.exists(out_filename):
-            print "skipping existing cloud file ", out_filename
+            print("skipping existing cloud file ", out_filename)
             continue
 
         rgb_file = rgb_list[rgb_stamp][0]
@@ -196,7 +196,7 @@ if __name__ == '__main__':
             write_ply(out_filename,points)
         else:
             all_points += points
-            print "Frame %d/%d, number of points so far: %d"%(frame+1,len(list),len(all_points))
+            print("Frame %d/%d, number of points so far: %d"%(frame+1,len(list),len(all_points)))
 
     if not args.individual:
       write_ply(args.output_file,all_points)
