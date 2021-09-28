@@ -437,7 +437,7 @@ if __name__ == '__main__':
         print("rotational_error.min %f deg"%(np.min(rot_error) * 180.0 / np.pi))
         print("rotational_error.max %f deg"%(np.max(rot_error) * 180.0 / np.pi))
     else:
-        print(np.mean(trans_error))
+        print(np.sqrt(np.dot(trans_error,trans_error) / len(trans_error)))
 
     if args.plot:
         import matplotlib
