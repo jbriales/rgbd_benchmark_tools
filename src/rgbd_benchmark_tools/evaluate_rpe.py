@@ -1,4 +1,4 @@
-#!/usr/bin/python
+#!/usr/bin/python3
 # Software License Agreement (BSD License)
 #
 # Copyright (c) 2013, Juergen Sturm, TUM
@@ -48,11 +48,11 @@ _EPS = np.finfo(float).eps * 4.0
 def transform44(l):
     """
     Generate a 4x4 homogeneous transformation matrix from a 3D point and unit quaternion.
-    
+
     Input:
     l -- tuple consisting of (stamp,tx,ty,tz,qx,qy,qz,qw) where
          (tx,ty,tz) is the 3D position and (qx,qy,qz,qw) is the unit quaternion.
-         
+
     Output:
     matrix -- 4x4 homogeneous transformation matrix
     """
@@ -61,9 +61,9 @@ def transform44(l):
     nq = np.dot(q, q)
     if nq < _EPS:
         return np.array((
-        (                1.0,                 0.0,                 0.0, t[0])
-        (                0.0,                 1.0,                 0.0, t[1])
-        (                0.0,                 0.0,                 1.0, t[2])
+        (                1.0,                 0.0,                 0.0, t[0]),
+        (                0.0,                 1.0,                 0.0, t[1]),
+        (                0.0,                 0.0,                 1.0, t[2]),
         (                0.0,                 0.0,                 0.0, 1.0)
         ), dtype=np.float64)
     q *= np.sqrt(2.0 / nq)
@@ -77,18 +77,18 @@ def transform44(l):
 
 def read_trajectory(filename, matrix=True):
     """
-    Read a trajectory from a text file. 
-    
+    Read a trajectory from a text file.
+
     Input:
     filename -- file to be read
     matrix -- convert poses to 4x4 matrices
-    
+
     Output:
     dictionary of stamped 3D poses
     """
     file = open(filename)
     data = file.read()
-    lines = data.replace(","," ").replace("\t"," ").split("\n") 
+    lines = data.replace(","," ").replace("\t"," ").split("\n")
     list = [[float(v.strip()) for v in line.split(" ") if v.strip()!=""] for line in lines if len(line)>0 and line[0]!="#"]
     list_ok = []
     for i,l in enumerate(list):
@@ -96,7 +96,7 @@ def read_trajectory(filename, matrix=True):
             continue
         isnan = False
         for v in l:
-            if np.isnan(v): 
+            if np.isnan(v):
                 isnan = True
                 break
         if isnan:
@@ -108,15 +108,15 @@ def read_trajectory(filename, matrix=True):
     else:
       traj = dict([(l[0],l[1:8]) for l in list_ok])
     return traj
-    
+
 def read_trajectory_h5(dset, matrix=True):
     """
-    Read a trajectory from a text file. 
-    
+    Read a trajectory from a text file.
+
     Input:
     dset -- a HDF5 dataset of dimensions 8xN with trajectory poses in TUM format
     matrix -- convert poses to 4x4 matrices
-    
+
     Output:
     dictionary of stamped 3D poses
     """
@@ -128,7 +128,7 @@ def read_trajectory_h5(dset, matrix=True):
             continue
         isnan = False
         for v in l:
-            if np.isnan(v): 
+            if np.isnan(v):
                 isnan = True
                 break
         if isnan:
@@ -144,11 +144,11 @@ def read_trajectory_h5(dset, matrix=True):
 def find_closest_index(L,t):
     """
     Find the index of the closest value in a list.
-    
+
     Input:
     L -- the list
     t -- value to be found
-    
+
     Output:
     index of the closest element
     """
@@ -172,11 +172,11 @@ def find_closest_index(L,t):
 def ominus(a,b):
     """
     Compute the relative 3D transformation between a and b.
-    
+
     Input:
     a -- first pose (homogeneous 4x4 matrix)
     b -- second pose (homogeneous 4x4 matrix)
-    
+
     Output:
     Relative 3D transformation from a to b.
     """
@@ -208,7 +208,7 @@ def compute_angle(transform):
 
 def distances_along_trajectory(traj):
     """
-    Compute the translational distances along a trajectory. 
+    Compute the translational distances along a trajectory.
     """
     keys = traj.keys()
     keys.sort()
@@ -219,10 +219,10 @@ def distances_along_trajectory(traj):
         sum += compute_distance(t)
         distances.append(sum)
     return distances
-    
+
 def rotations_along_trajectory(traj,scale):
     """
-    Compute the angular rotations along a trajectory. 
+    Compute the angular rotations along a trajectory.
     """
     keys = traj.keys()
     keys.sort()
@@ -233,12 +233,12 @@ def rotations_along_trajectory(traj,scale):
         sum += compute_angle(t)*scale
         distances.append(sum)
     return distances
-    
+
 
 def evaluate_trajectory(traj_gt,traj_est,param_max_pairs=10000,param_fixed_delta=False,param_delta=1.00,param_delta_unit="s",param_offset=0.00,param_scale=1.00):
     """
     Compute the relative pose error between two trajectories.
-    
+
     Input:
     traj_gt -- the first trajectory (ground truth)
     traj_est -- the second trajectory (estimated trajectory)
@@ -254,7 +254,7 @@ def evaluate_trajectory(traj_gt,traj_est,param_max_pairs=10000,param_fixed_delta
                         "f": frames
     param_offset -- time offset between two trajectories (to model the delay)
     param_scale -- scale to be applied to the second trajectory
-    
+
     Output:
     list of compared poses and the resulting translation and rotation error
     """
@@ -262,7 +262,7 @@ def evaluate_trajectory(traj_gt,traj_est,param_max_pairs=10000,param_fixed_delta
     stamps_est = list(traj_est.keys())
     stamps_gt.sort()
     stamps_est.sort()
-    
+
     stamps_est_return = []
     for t_est in stamps_est:
         t_gt = stamps_gt[find_closest_index(stamps_gt,t_est + param_offset)]
@@ -296,14 +296,14 @@ def evaluate_trajectory(traj_gt,traj_est,param_max_pairs=10000,param_fixed_delta
         pairs = []
         for i in range(len(traj_est)):
             j = find_closest_index(index_est,index_est[i] + param_delta)
-            if j!=len(traj_est)-1: 
+            if j!=len(traj_est)-1:
                 pairs.append((i,j))
         if(param_max_pairs!=0 and len(pairs)>param_max_pairs):
             pairs = random.sample(pairs,param_max_pairs)
-    
+
     gt_interval = np.median([s-t for s,t in zip(stamps_gt[1:],stamps_gt[:-1])])
     gt_max_time_difference = 2*gt_interval
-    
+
     result = []
     for i,j in pairs:
         stamp_est_0 = stamps_est[i]
@@ -311,23 +311,23 @@ def evaluate_trajectory(traj_gt,traj_est,param_max_pairs=10000,param_fixed_delta
 
         stamp_gt_0 = stamps_gt[ find_closest_index(stamps_gt,stamp_est_0 + param_offset) ]
         stamp_gt_1 = stamps_gt[ find_closest_index(stamps_gt,stamp_est_1 + param_offset) ]
-        
+
         if(abs(stamp_gt_0 - (stamp_est_0 + param_offset)) > gt_max_time_difference  or
            abs(stamp_gt_1 - (stamp_est_1 + param_offset)) > gt_max_time_difference):
             continue
-        
+
         error44 = ominus(  scale(
                            ominus( traj_est[stamp_est_1], traj_est[stamp_est_0] ),param_scale),
                            ominus( traj_gt[stamp_gt_1], traj_gt[stamp_gt_0] ) )
-        
+
         trans = compute_distance(error44)
         rot = compute_angle(error44)
-        
+
         result.append([stamp_est_0,stamp_est_1,stamp_gt_0,stamp_gt_1,trans,rot])
-        
+
     if len(result)<2:
         raise Exception("Couldn't find matching timestamp pairs between groundtruth and estimated trajectory!")
-        
+
     return result
 
 def percentile(seq,q):
@@ -342,7 +342,7 @@ if __name__ == '__main__':
     random.seed(0)
 
     parser = argparse.ArgumentParser(description='''
-    This script computes the relative pose error from the ground truth trajectory and the estimated trajectory. 
+    This script computes the relative pose error from the ground truth trajectory and the estimated trajectory.
     ''')
     parser.add_argument('groundtruth_file', help='ground-truth trajectory file (format: "timestamp tx ty tz qx qy qz qw")')
     parser.add_argument('estimated_file', help='estimated trajectory file (format: "timestamp tx ty tz qx qy qz qw")')
@@ -357,10 +357,10 @@ if __name__ == '__main__':
     parser.add_argument('--plot', help='plot the result to a file (requires --fixed_delta, output format: png)')
     parser.add_argument('--verbose', help='print all evaluation data (otherwise, only the mean translational error measured in meters will be printed)', action='store_true')
     args = parser.parse_args()
-    
+
     if args.plot and not args.fixed_delta:
         sys.exit("The '--plot' option can only be used in combination with '--fixed_delta'")
-    
+
     if args.h5file == "":
         traj_gt = read_trajectory(args.groundtruth_file)
         traj_est = read_trajectory(args.estimated_file)
@@ -370,7 +370,7 @@ if __name__ == '__main__':
         dset_est = h5f[args.estimated_file]
         traj_gt = read_trajectory_h5(dset_gt)
         traj_est = read_trajectory_h5(dset_est)
-    
+
     result = evaluate_trajectory(traj_gt,
                                  traj_est,
                                  int(args.max_pairs),
@@ -379,22 +379,22 @@ if __name__ == '__main__':
                                  args.delta_unit,
                                  float(args.offset),
                                  float(args.scale))
-    
+
     stamps = np.array(result)[:,0]
     trans_error = np.array(result)[:,4]
     rot_error = np.array(result)[:,5]
-    
+
     if args.h5file != "":
         # Create subgroup in the parent group of the estimation dataset
         sample_group = dset_est.parent
         eval_group = sample_group.require_group('eval/'+args.delta_unit)
-        
+
         # Save the evaluation vectors as datasets in the eval group
         eval_group.create_dataset('stamps', data=stamps)
         eval_group.create_dataset('allStamps', data=np.array(result)[:,0:4])
         eval_group.create_dataset('trans_error', data=trans_error)
         eval_group.create_dataset('rot_error', data=rot_error)
-        
+
         # Save the evaluation metrics as datasets of a single value in the eval group
         t_rmse = np.sqrt(np.dot(trans_error,trans_error) / len(trans_error))
         t_mean = np.mean(trans_error)
@@ -404,7 +404,7 @@ if __name__ == '__main__':
         eval_group.create_dataset('t_mean', data=t_mean )
         eval_group.create_dataset('t_median', data=t_median )
         eval_group.create_dataset('t_max', data=t_max )
-        
+
         r_rmse = np.sqrt(np.dot(rot_error,rot_error) / len(rot_error)) * 180.0 / np.pi
         r_mean = np.mean(rot_error) * 180.0 / np.pi
         r_median = np.median(rot_error) * 180.0 / np.pi
@@ -414,38 +414,38 @@ if __name__ == '__main__':
         eval_group.create_dataset('r_median', data=r_median )
         eval_group.create_dataset('r_max', data=r_max )
 
-    
+
     if args.save:
         f = open(args.save,"w")
         f.write("\n".join([" ".join(["%f"%v for v in line]) for line in result]))
         f.close()
-    
+
     if args.verbose:
-        print "compared_pose_pairs %d pairs"%(len(trans_error))
+        print("compared_pose_pairs %d pairs"%(len(trans_error)))
 
-        print "translational_error.rmse %f m"%np.sqrt(np.dot(trans_error,trans_error) / len(trans_error))
-        print "translational_error.mean %f m"%np.mean(trans_error)
-        print "translational_error.median %f m"%np.median(trans_error)
-        print "translational_error.std %f m"%np.std(trans_error)
-        print "translational_error.min %f m"%np.min(trans_error)
-        print "translational_error.max %f m"%np.max(trans_error)
+        print("translational_error.rmse %f m"%np.sqrt(np.dot(trans_error,trans_error) / len(trans_error)))
+        print("translational_error.mean %f m"%np.mean(trans_error))
+        print("translational_error.median %f m"%np.median(trans_error))
+        print("translational_error.std %f m"%np.std(trans_error))
+        print("translational_error.min %f m"%np.min(trans_error))
+        print("translational_error.max %f m"%np.max(trans_error))
 
-        print "rotational_error.rmse %f deg"%(np.sqrt(np.dot(rot_error,rot_error) / len(rot_error)) * 180.0 / np.pi)
-        print "rotational_error.mean %f deg"%(np.mean(rot_error) * 180.0 / np.pi)
-        print "rotational_error.median %f deg"%(np.median(rot_error) * 180.0 / np.pi)
-        print "rotational_error.std %f deg"%(np.std(rot_error) * 180.0 / np.pi)
-        print "rotational_error.min %f deg"%(np.min(rot_error) * 180.0 / np.pi)
-        print "rotational_error.max %f deg"%(np.max(rot_error) * 180.0 / np.pi)
+        print("rotational_error.rmse %f deg"%(np.sqrt(np.dot(rot_error,rot_error) / len(rot_error)) * 180.0 / np.pi))
+        print("rotational_error.mean %f deg"%(np.mean(rot_error) * 180.0 / np.pi))
+        print("rotational_error.median %f deg"%(np.median(rot_error) * 180.0 / np.pi))
+        print("rotational_error.std %f deg"%(np.std(rot_error) * 180.0 / np.pi))
+        print("rotational_error.min %f deg"%(np.min(rot_error) * 180.0 / np.pi))
+        print("rotational_error.max %f deg"%(np.max(rot_error) * 180.0 / np.pi))
     else:
-        print np.mean(trans_error)
+        print(np.sqrt(np.dot(trans_error,trans_error) / len(trans_error)))
 
-    if args.plot:    
+    if args.plot:
         import matplotlib
         matplotlib.use('Agg')
         import matplotlib.pyplot as plt
         import matplotlib.pylab as pylab
         fig = plt.figure()
-        ax = fig.add_subplot(111)        
+        ax = fig.add_subplot(111)
         ax.plot(stamps - stamps[0],trans_error,'-',color="blue")
         #ax.plot([t for t,e in err_rot],[e for t,e in err_rot],'-',color="red")
         ax.set_xlabel('time [s]')

@@ -20,18 +20,18 @@ if __name__ == '__main__':
     parser.add_argument('group', help='H5 path of the main group containing sample minor groups')
     parser.add_argument('delta_unit', help='delta_unit of the metrics to collect')
     args = parser.parse_args()
-        
+
     h5f = h5py.File(args.h5file,'a')
     unit = args.delta_unit
-    
+
     # Save the evaluation metric values in the samples' parent group
     main_group = h5f[args.group]
     # Check if eval group already exists in the main group
     if 'eval/'+unit in main_group:
-        print "Removing existing eval/"+unit + " group in" + main_group.name
+        print("Removing existing eval/"+unit + " group in" + main_group.name)
         del main_group['eval/'+unit]
     numOfSamples = len(main_group)
-    
+
     # Create new eval group in the main group
     samples = main_group.keys()
     samples = [x for x in samples if x != 'eval']
@@ -47,11 +47,11 @@ if __name__ == '__main__':
             r_arr[i] = main_group[sample+'/eval/'+unit+'/r_'+name][()]
         # Check if dataset already exists in the group
         if 't_'+name in eval_group:
-            print "Removing existing trans dataset in " + eval_group.name
+            print("Removing existing trans dataset in " + eval_group.name)
             del eval_group['t_'+name]
         if 'r_'+name in eval_group:
-            print "Removing existing rot dataset in " + eval_group.name
-            del eval_group['r_'+name]    
+            print("Removing existing rot dataset in " + eval_group.name)
+            del eval_group['r_'+name]
         # Save as a new dataset in the main group
         eval_group.create_dataset('t_'+name, data=t_arr)
         eval_group.create_dataset('r_'+name, data=r_arr)

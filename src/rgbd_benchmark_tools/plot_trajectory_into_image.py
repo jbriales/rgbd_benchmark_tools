@@ -35,7 +35,7 @@
 # sudo apt-get install meshlab
 
 """
-This script plots a trajectory into an image sequence. 
+This script plots a trajectory into an image sequence.
 """
 
 import argparse
@@ -53,14 +53,14 @@ centerY = 239.5
 def point(pose,px,py,pz):
     """
     Project a 3D point into the camera.
-    
+
     Input:
     pose -- camera pose
     px,py,pz -- point in global frame
-    
+
     Output:
     u,v -- pixel coordinates
-    
+
     """
     p = pose.dot(numpy.matrix([[px],[py],[pz],[1]]))
     X = p[0,0]
@@ -69,17 +69,17 @@ def point(pose,px,py,pz):
     u = X/Z * focalLength + centerX
     v = Y/Z * focalLength + centerY
     return [u,v]
-    
+
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='''
-    This script plots a trajectory into an image sequence. 
+    This script plots a trajectory into an image sequence.
     ''')
     parser.add_argument('image_list', help='input image list (format: timestamp filename)')
     parser.add_argument('trajectory_file', help='input trajectory (format: timestamp tx ty tz qx qy qz qw)')
     parser.add_argument('out_image', help='file name of the result (format: png)')
     args = parser.parse_args()
-    
+
     image_list = read_file_list(args.image_list)
     pose_list = read_file_list(args.trajectory_file)
     traj = read_trajectory(args.trajectory_file)
@@ -88,24 +88,24 @@ if __name__ == '__main__':
 
     stamps = image_list.keys()
     stamps.sort()
-    
+
     matches_dict = dict(matches)
     for stamp in stamps:
         image_file = image_list[stamp][0]
         image = Image.open(image_file)
-        print "image stamp: %f"%stamp
-        
-        if stamp in matches_dict: 
-            print "pose stamp: %f"%matches_dict[stamp]
+        print("image stamp: %f"%stamp)
+
+        if stamp in matches_dict:
+            print("pose stamp: %f"%matches_dict[stamp])
             pose = traj[matches_dict[stamp]]
-            
+
             stamps = traj.keys()
             stamps.sort()
-        
-            xy = []    
+
+            xy = []
             draw = ImageDraw.Draw(image)
             size = 0.01
-            
+
             for s in stamps:
                 p = traj[s]
                 rel_pose = numpy.dot(numpy.linalg.inv(pose),p)
@@ -116,7 +116,7 @@ if __name__ == '__main__':
                 draw.line(point(rel_pose,0,0,0) + point(rel_pose,0,size,0), fill="#00ff00")
                 draw.line(point(rel_pose,0,0,0) + point(rel_pose,0,0,size), fill="#0000ff")
             del draw
-            
+
         image.save(os.path.splitext(args.out_image)[0]+"-%f.png"%stamp)
-    
-    
+
+
